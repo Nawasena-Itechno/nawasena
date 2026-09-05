@@ -1,0 +1,15 @@
+[
+  {
+    "as_of": "2024-01-01",
+    "komoditas": "Cabai Rawit Merah",
+    "horizon": 7,
+    "harga_t": 40000,
+    "sigma_t": 0.02,
+    "q10": -1.28,
+    "q50": 0.0,
+    "q90": 1.28,
+    "expected_p10": 37380.464207282064,
+    "expected_p50": 40000.0,
+    "expected_p90": 42803.10675457864
+  }
+]
