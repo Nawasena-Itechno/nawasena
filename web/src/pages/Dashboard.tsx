@@ -13,7 +13,6 @@ import {
   AlertTriangle,
   Menu,
   X,
-  CalendarClock,
   RefreshCw,
 } from 'lucide-react';
 import { auth } from '../lib/auth';
@@ -27,6 +26,8 @@ import MenuSubstitusi from './dashboard/MenuSubstitusi';
 import MenuSimulasiSusut from './dashboard/MenuSimulasiSusut';
 import MenuProfil from './dashboard/MenuProfil';
 import MenuInformasi from './dashboard/MenuInformasi';
+import Select from '../components/ui/Select';
+import DateField from '../components/ui/DateField';
 import LogoMark from '../assets/nawasena-logo-logo.svg';
 
 /** Rentang tanggal yang tercakup basis data harga PIHPS milik sistem. */
@@ -270,35 +271,28 @@ export default function Dashboard() {
               <p className="truncate text-sm font-bold text-[#0D3311]">{profile.business_name}</p>
             </div>
 
-            <label className="flex items-center gap-2 rounded-2xl border border-[#A5D6A7] bg-white px-3 py-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#7A8C78]">
-                Komoditas
-              </span>
-              <select
-                value={komoditas}
-                onChange={(e) => setKomoditas(e.target.value)}
-                className="bg-transparent text-sm font-bold text-[#0D3311] outline-none"
-              >
-                {profile.commodities.map((k) => (
-                    <option key={k.name} value={k.name}>
-                      {k.name}
-                    </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              value={komoditas}
+              onChange={setKomoditas}
+              variant="chip"
+              align="end"
+              ariaLabel="Komoditas aktif"
+              placeholder="Pilih komoditas"
+              icon={<ShoppingBasket className="h-4 w-4" />}
+              options={profile.commodities.map((k) => ({
+                value: k.name,
+                label: k.name,
+                hint: `${k.weekly_consumption_kg.toLocaleString('id-ID')} kg / minggu`,
+              }))}
+            />
 
-            <label className="flex items-center gap-2 rounded-2xl border border-[#A5D6A7] bg-white px-3 py-2">
-              <CalendarClock className="h-4 w-4 shrink-0 text-[#7A8C78]" />
-              <span className="sr-only">Tanggal acuan</span>
-              <input
-                type="date"
-                value={asOf}
-                min={DATA_RANGE.min}
-                max={DATA_RANGE.max}
-                onChange={(e) => setAsOf(e.target.value)}
-                className="bg-transparent text-sm font-bold text-[#0D3311] outline-none"
-              />
-            </label>
+            <DateField
+              value={asOf}
+              onChange={setAsOf}
+              min={DATA_RANGE.min}
+              max={DATA_RANGE.max}
+              compact
+            />
 
             <button
               onClick={() => load()}

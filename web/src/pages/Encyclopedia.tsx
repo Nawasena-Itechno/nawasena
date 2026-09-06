@@ -9,6 +9,7 @@ import SiteFooter from '../components/SiteFooter';
 import CommodityCard from '../components/CommodityCard';
 import CommodityDrawer from '../components/CommodityDrawer';
 import { Reveal, CountUp } from '../components/motion/Reveal';
+import Select from '../components/ui/Select';
 
 type SortKey = 'volatil' | 'termahal' | 'tercepat-busuk' | 'nama';
 
@@ -157,20 +158,16 @@ export default function Encyclopedia() {
               )}
             </label>
 
-            <label className="relative shrink-0">
-              <SlidersHorizontal className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7A8C78]" />
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortKey)}
-                className="w-full appearance-none rounded-full border border-[#A5D6A7] bg-white py-3 pl-11 pr-9 text-sm font-semibold text-[#25422A] outline-none transition-colors focus:border-[#1B5E20] lg:w-56"
-              >
-                {SORTS.map((s) => (
-                  <option key={s.key} value={s.key}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              value={sort}
+              onChange={(v) => setSort(v as SortKey)}
+              variant="pill"
+              align="end"
+              ariaLabel="Urutkan komoditas"
+              icon={<SlidersHorizontal className="h-4 w-4" />}
+              className="shrink-0 lg:w-56"
+              options={SORTS.map((s) => ({ value: s.key, label: s.label }))}
+            />
           </div>
 
           <div className="no-bar mt-3 flex gap-2 overflow-x-auto pb-1">

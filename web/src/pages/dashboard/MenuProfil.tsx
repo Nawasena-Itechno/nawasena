@@ -19,6 +19,7 @@ import type { MetadataResponse } from '../../lib/api';
 import { auth } from '../../lib/auth';
 import { formatPct } from '../../lib/format';
 import { InfoPop, SectionHead } from '../../components/dashboard/ui';
+import Select from '../../components/ui/Select';
 import { Reveal } from '../../components/motion/Reveal';
 
 // KATEGORI removed in favor of dynamic metadata
@@ -178,28 +179,33 @@ export default function MenuProfil({
                 />
               </Field>
 
-              <Field label="Kategori F&B">
-                <select
+              <Field label="Kategori F&B" bare>
+                <Select
                   value={draft.fnb_category}
-                  onChange={(e) => setDraft({ ...draft, fnb_category: e.target.value })}
-                  className="w-full rounded-2xl border border-[#A5D6A7] bg-[#F8FCF8] px-4 py-3 text-sm font-semibold text-[#0D3311] outline-none focus:border-[#1B5E20]"
-                >
-                  {metadata?.categories.map((k) => (
-                    <option key={k.id}>{k.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setDraft({ ...draft, fnb_category: v })}
+                  ariaLabel="Kategori F&B"
+                  icon={<UtensilsCrossed className="h-4 w-4" />}
+                  placeholder="Pilih kategori"
+                  options={(metadata?.categories ?? []).map((k) => ({
+                    value: k.name,
+                    label: k.name,
+                  }))}
+                />
               </Field>
 
-              <Field label="Pasar acuan belanja">
-                <select
+              <Field label="Pasar acuan belanja" bare>
+                <Select
                   value={draft.reference_market}
-                  onChange={(e) => setDraft({ ...draft, reference_market: e.target.value })}
-                  className="w-full rounded-2xl border border-[#A5D6A7] bg-[#F8FCF8] px-4 py-3 text-sm font-semibold text-[#0D3311] outline-none transition-colors focus:border-[#1B5E20] focus:ring-4 focus:ring-[#66BB6A]/20"
-                >
-                  {metadata?.markets.map((m) => (
-                    <option key={m.id} value={m.name}>{m.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => setDraft({ ...draft, reference_market: v })}
+                  ariaLabel="Pasar acuan belanja"
+                  icon={<MapPin className="h-4 w-4" />}
+                  placeholder="Pilih pasar"
+                  options={(metadata?.markets ?? []).map((m) => ({
+                    value: m.name,
+                    label: m.name,
+                    hint: m.region,
+                  }))}
+                />
               </Field>
 
 
@@ -462,17 +468,22 @@ function Field({
   label,
   hint,
   children,
+  /** Dropdown kustom memakai <button>, yang bukan kontrol berlabel — pembungkusnya
+      harus <div> agar klik pada teks label tidak diteruskan ke tombol. */
+  bare = false,
 }: {
   label: string;
   hint?: string;
   children: React.ReactNode;
+  bare?: boolean;
 }) {
+  const Bungkus = bare ? 'div' : 'label';
   return (
-    <label className="block">
+    <Bungkus className="block">
       <span className="block text-sm font-bold text-[#0D3311]">{label}</span>
       {hint && <span className="mt-0.5 block text-xs text-[#6B7F69]">{hint}</span>}
       <span className="mt-2 block">{children}</span>
-    </label>
+    </Bungkus>
   );
 }
 

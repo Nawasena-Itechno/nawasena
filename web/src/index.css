@@ -197,3 +197,104 @@ input[type='range'].nw-range::-moz-range-thumb {
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   Lapis kedua — dropdown kustom, pemilih tanggal & panggung pendaftaran
+   Semua warna tetap memakai token di atas agar auth, dasbor, dan landing
+   terbaca sebagai satu sistem yang sama.
+   ========================================================================== */
+
+@keyframes nw-pop-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.965); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes nw-pop-up {
+  from { opacity: 0; transform: translateY(8px) scale(0.965); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes nw-aurora {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6%, -8%, 0) scale(1.12); }
+  66%      { transform: translate3d(-7%, 5%, 0) scale(0.94); }
+}
+@keyframes nw-sheen {
+  from { transform: translateX(-160%) skewX(-18deg); }
+  to   { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes nw-check-pop {
+  0%   { transform: scale(0.2) rotate(-25deg); opacity: 0; }
+  60%  { transform: scale(1.18) rotate(4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+@keyframes nw-step-in-next {
+  from { opacity: 0; transform: translateX(38px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes nw-step-in-prev {
+  from { opacity: 0; transform: translateX(-38px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes nw-orbit {
+  from { transform: rotate(0deg) translateX(var(--orbit, 120px)) rotate(0deg); }
+  to   { transform: rotate(360deg) translateX(var(--orbit, 120px)) rotate(-360deg); }
+}
+@keyframes nw-caret {
+  0%, 100% { opacity: 0.25; }
+  50%      { opacity: 1; }
+}
+
+.anim-pop-in   { animation: nw-pop-in 0.22s var(--ease-out-soft) both; }
+.anim-pop-up   { animation: nw-pop-up 0.22s var(--ease-out-soft) both; }
+.anim-aurora   { animation: nw-aurora 20s ease-in-out infinite; }
+.anim-check    { animation: nw-check-pop 0.42s var(--ease-out-soft) both; }
+.anim-step-next { animation: nw-step-in-next 0.45s var(--ease-out-soft) both; }
+.anim-step-prev { animation: nw-step-in-prev 0.45s var(--ease-out-soft) both; }
+.anim-orbit    { animation: nw-orbit 26s linear infinite; }
+.anim-caret    { animation: nw-caret 1.6s ease-in-out infinite; }
+
+/* Kilau yang menyapu tombol utama saat disorot. */
+.sheen { position: relative; overflow: hidden; }
+.sheen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), transparent);
+  transform: translateX(-160%) skewX(-18deg);
+  pointer-events: none;
+}
+.sheen:hover::after { animation: nw-sheen 0.85s var(--ease-out-soft); }
+
+/* Panel kaca untuk kartu formulir di atas latar bergradasi. */
+.glass-card {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+}
+
+/* Latar bergaris diagonal halus untuk panel gelap. */
+.diagonal-weave {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(165, 214, 167, 0.07) 0px,
+    rgba(165, 214, 167, 0.07) 1px,
+    transparent 1px,
+    transparent 11px
+  );
+}
+
+/* Bar kekuatan sandi & bar kemajuan langkah. */
+.meter-fill { transition: width 0.5s var(--ease-out-soft), background-color 0.4s ease; }
+
+/* Tumpukan popover memakai satu nilai agar tak pernah tertutup header lengket. */
+.pop-layer { z-index: 70; }
+
+@media (prefers-reduced-motion: reduce) {
+  .anim-aurora, .anim-orbit, .anim-caret { animation: none !important; }
+  .sheen:hover::after { animation: none !important; }
+  .anim-step-next, .anim-step-prev, .anim-pop-in, .anim-pop-up, .anim-check {
+    animation-duration: 0.01ms !important;
+  }
+}
