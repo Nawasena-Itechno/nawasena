@@ -2,27 +2,49 @@
 
 **Sistem Pendukung Keputusan Pengadaan F&B untuk UMKM**
 
-Nawasena (*Navigate Prices, Eliminate Waste*) adalah platform berbasis web yang membantu pelaku UMKM kuliner (warung, restoran, katering) dalam mengambil keputusan pengadaan bahan baku secara cerdas. Sistem ini menggabungkan tiga lapisan kecerdasan:
-1. **Model Statistik Buatan Sendiri** — *Filtered Historical Simulation (FHS)* berbasis Python untuk prediksi rentang harga komoditas (interval kuantil P10/P50/P90) hingga 14 hari ke depan.
-2. **Simulasi Fisika Susut Stok** — model peluruhan eksponensial untuk menghitung kerugian stok akibat pembusukan berdasarkan metode penyimpanan yang dipilih UMKM.
-3. **Analisis Solusi AI (Google Gemini)** — menghasilkan rekomendasi aksi konkret dan mitigasi stok berlebih (resep olahan) berdasarkan kondisi pasar dan profil bisnis.
+## 1. Penjelasan Aplikasi
+
+Nawasena (*Navigate Prices, Eliminate Waste*) adalah platform berbasis web yang dirancang khusus untuk membantu pelaku UMKM kuliner (warung, restoran, katering) dalam menghadapi inflasi harga pangan dan meminimalkan pemborosan stok. 
+
+**Latar Belakang:** UMKM kuliner seringkali berbelanja bahan baku (terutama bahan segar seperti cabai yang harganya sangat fluktuatif) secara tebak-tebakan. Akibatnya, mereka sering menimbun saat harga murah namun berujung busuk, atau membeli sedikit namun kehabisan saat harga sedang mahal. 
+
+**Tujuan:** Aplikasi ini bertujuan untuk memberikan landasan keputusan (berbasis data dan AI) bagi UMKM dalam menjawab pertanyaan: *"Kapan harus belanja, berapa banyak yang harus dibeli, dan bagaimana cara menyimpannya agar kerugian finansial akibat busuk dan inflasi bisa ditekan seminimal mungkin?"*
+
+**Keterkaitan dengan *Sustainable Development Goals* (SDGs):**
+Aplikasi Nawasena sejalan dengan agenda global SDGs, secara spesifik:
+- 🎯 **SDG 8 (Pekerjaan Layak dan Pertumbuhan Ekonomi)** — *(Fokus Utama)* Melindungi UMKM dari kebangkrutan akibat guncangan harga pangan, memastikan keberlanjutan bisnis, dan mendorong pertumbuhan ekonomi mikro yang tangguh.
+- 🏙️ **SDG 11 (Kota dan Permukiman yang Berkelanjutan)** — Menciptakan ekosistem rantai pasok pangan perkotaan yang lebih efisien dengan mengurangi penumpukan limbah organik ( *food waste*) dari sisa bahan baku UMKM yang membusuk.
 
 ---
 
-## 🏗️ Arsitektur Sistem
+## 2. Fitur Utama
 
-| Layer | Teknologi |
+Keunggulan dan pembeda utama Nawasena dibandingkan aplikasi kasir atau pencatatan stok biasa adalah integrasi 3 lapisan kecerdasan:
+
+1. **Prediksi Harga Kuantil (Model Statistik Buatan Sendiri)** 
+   Menggunakan model *Filtered Historical Simulation (FHS)* berbasis Python untuk memprediksi rentang harga komoditas (skenario optimis, normal, pesimis) hingga 14 hari ke depan berdasarkan data PIHPS Bank Indonesia.
+2. **Simulasi Fisika Susut Stok** 
+   Nawasena tidak hanya mencatat jumlah barang, tetapi *menghitung secara matematis* laju pembusukan bahan baku (peluruhan eksponensial) berdasarkan metode penyimpanan (Suhu Ruang, Chiller, Kedap Udara).
+3. **Analisis Keputusan AI (Generative AI)**
+   Menggunakan **Google Gemini** untuk menganalisis data prediksi harga dan kondisi stok yang membusuk, lalu secara otomatis menghasilkan rekomendasi tindakan konkret (contoh: *"Tunda beli cabai karena besok harga diprediksi turun, gunakan sisa stok dengan resep X"*).
+
+---
+
+## 3. Teknologi yang Digunakan
+
+| Layer | Teknologi & Library/Framework |
 |---|---|
-| **Frontend** | React 19 + TypeScript + Vite + TailwindCSS |
-| **Backend** | Go (Golang) + Chi Router |
-| **Database** | PostgreSQL (Supabase) |
-| **Model ML/Statistik** | Python (NumPy + Pandas) — *Filtered Historical Simulation* |
-| **Generative AI** | Google Gemini API |
-| **Deployment** | Railway (Docker) |
+| **Frontend** | React 19, TypeScript, Vite, TailwindCSS, React Router, Recharts (untuk grafik) |
+| **Backend** | Go (Golang), Chi Router (Lightweight HTTP Router), standard library `html/template` |
+| **Database** | PostgreSQL (di-hosting via Supabase), database driver `lib/pq` |
+| **Model ML/Statistik** | Python, NumPy, Pandas (untuk pipeline pemodelan FHS) |
+| **Generative AI** | Google Gemini API (via REST call) |
+| **Deployment** | Docker, Railway (Platform as a Service) |
 
-**Cara kerja:** Frontend React di-*build* menjadi file statis, lalu disajikan langsung oleh server Go dalam satu binary tunggal. Model Python dijalankan secara *offline* (pipeline) untuk menghasilkan data prediksi harga yang disimpan ke database.
+**Cara kerja arsitektur:** Frontend React di-*build* menjadi file statis, lalu disajikan langsung oleh server Go dalam satu binary tunggal. Tidak diperlukan server web terpisah. Model Python berjalan sebagai pipeline terpisah untuk me-refresh data prediksi.
 
 ---
+
 
 ## 🤖 Model Statistik Buatan Sendiri — Filtered Historical Simulation (FHS)
 
