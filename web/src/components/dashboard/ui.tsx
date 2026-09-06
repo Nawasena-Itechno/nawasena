@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Info, X, Target, Database, ArrowRight, Sigma } from 'lucide-react';
 import { useLockBody } from '../motion/hooks';
@@ -16,15 +16,11 @@ export interface Penjelasan {
   aksi?: string;
 }
 
-/**
- * Tombol info yang membuka penjelasan satu angka.
- *
- * Setiap harga di dasbor wajib punya ini: pengguna harus bisa tahu untuk apa
- * angka itu ada, dari mana asalnya, dan apa yang harus dilakukan dengannya.
- */
 export function InfoPop({ judul, isi }: { judul: string; isi: Penjelasan }) {
   const [open, setOpen] = useState(false);
+  const [left, setLeft] = useState<number | null>(null);
   const wrap = useRef<HTMLSpanElement | null>(null);
+  const pop = useRef<HTMLSpanElement | null>(null);
   const id = useId();
 
   useEffect(() => {
@@ -38,6 +34,28 @@ export function InfoPop({ judul, isi }: { judul: string; isi: Penjelasan }) {
     return () => {
       document.removeEventListener('mousedown', onDoc);
       document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const margin = 12;
+    const reposition = () => {
+      const btnRect = wrap.current?.getBoundingClientRect();
+      const popWidth = pop.current?.offsetWidth;
+      if (!btnRect || !popWidth) return;
+      const center = btnRect.left + btnRect.width / 2;
+      const maxLeft = window.innerWidth - margin - popWidth;
+      const idealLeft = center - popWidth / 2;
+      const clampedLeft = Math.min(Math.max(idealLeft, margin), Math.max(margin, maxLeft));
+      setLeft(clampedLeft - btnRect.left);
+    };
+    reposition();
+    window.addEventListener('resize', reposition);
+    window.addEventListener('scroll', reposition, true);
+    return () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('scroll', reposition, true);
     };
   }, [open]);
 
@@ -60,9 +78,11 @@ export function InfoPop({ judul, isi }: { judul: string; isi: Penjelasan }) {
 
       {open && (
         <span
+          ref={pop}
           id={id}
           role="tooltip"
-          className="anim-rise absolute left-1/2 top-8 z-50 w-[min(19rem,80vw)] -translate-x-1/2 rounded-2xl border border-[#A5D6A7] bg-white p-4 text-left shadow-[0_24px_50px_-20px_rgba(13,51,17,0.55)]"
+          style={{ left: left ?? '50%', visibility: left === null ? 'hidden' : 'visible' }}
+          className="anim-rise absolute top-8 z-50 w-[min(19rem,80vw)] rounded-2xl border border-[#A5D6A7] bg-white p-4 text-left shadow-[0_24px_50px_-20px_rgba(13,51,17,0.55)]"
         >
           <span className="mb-2 flex items-start justify-between gap-2">
             <span className="font-display text-sm font-bold text-[#0D3311]">{judul}</span>
