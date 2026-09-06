@@ -16,9 +16,9 @@ export default function PriceChart({ currentPrice, p7_10, p7_50, p7_90, p14_10, 
   ];
 
   return (
-    <div className="h-64 w-full bg-white rounded-2xl border border-slate-100 p-4 shadow-sm relative overflow-hidden">
+    <div className="h-64 w-full bg-white rounded-2xl border border-emerald-100 p-4 shadow-sm relative overflow-hidden">
       <div className="absolute top-4 left-4 z-10">
-        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Proyeksi Risiko Harga</h4>
+        <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Proyeksi Risiko Harga</h4>
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={data} margin={{ top: 30, right: 10, left: 10, bottom: 0 }}>

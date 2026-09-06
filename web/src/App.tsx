@@ -3,12 +3,14 @@ import Layout from './components/Layout';
 import Dashboard from './pages/Dashboard';
 import Methodology from './pages/Methodology';
 import Onboarding from './pages/Onboarding';
+import Landing from './pages/Landing';
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Onboarding />} />
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Onboarding />} />
         <Route element={<Layout />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/metodologi" element={<Methodology />} />

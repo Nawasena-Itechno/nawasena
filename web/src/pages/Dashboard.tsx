@@ -71,15 +71,15 @@ export default function Dashboard() {
         <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-200/50 rounded-full blur-3xl pointer-events-none"></div>
         
         <div className="space-y-2 flex-1 min-w-[200px] relative z-10">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Pemakaian / Minggu</label>
+          <label className="block text-xs font-bold text-emerald-500 uppercase tracking-wider">Pemakaian / Minggu</label>
           <div className="relative">
-            <input type="number" value={pemakaian} onChange={e => setPemakaian(Number(e.target.value))} className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-700"/>
-            <span className="absolute right-4 top-3.5 text-slate-400 font-medium">kg</span>
+            <input type="number" value={pemakaian} onChange={e => setPemakaian(Number(e.target.value))} className="w-full bg-white/80 border border-emerald-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-emerald-700"/>
+            <span className="absolute right-4 top-3.5 text-emerald-400 font-medium">kg</span>
           </div>
         </div>
         <div className="space-y-2 flex-1 min-w-[200px] relative z-10">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Komoditas</label>
-          <select value={komoditas} onChange={e => setKomoditas(e.target.value)} className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-700 appearance-none">
+          <label className="block text-xs font-bold text-emerald-500 uppercase tracking-wider">Komoditas</label>
+          <select value={komoditas} onChange={e => setKomoditas(e.target.value)} className="w-full bg-white/80 border border-emerald-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-emerald-700 appearance-none">
             <option>Cabai Rawit Merah</option>
             <option>Cabai Rawit Hijau</option>
             <option>Cabai Merah Keriting</option>
@@ -87,10 +87,10 @@ export default function Dashboard() {
           </select>
         </div>
         <div className="space-y-2 flex-1 min-w-[200px] relative z-10">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-2">
+          <label className="block text-xs font-bold text-emerald-500 uppercase tracking-wider flex items-center gap-2">
             <Calendar className="w-3.5 h-3.5 text-emerald-600"/> Mesin Waktu (Tanggal)
           </label>
-          <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)} className="w-full bg-white/80 border border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-slate-700"/>
+          <input type="date" value={asOf} onChange={e => setAsOf(e.target.value)} className="w-full bg-white/80 border border-emerald-200 rounded-xl px-4 py-3 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-medium text-emerald-700"/>
         </div>
       </section>
 
@@ -129,8 +129,8 @@ export default function Dashboard() {
           <div className="grid md:grid-cols-5 gap-6">
             
             {/* Kartu Keputusan */}
-            <div className="md:col-span-3 bg-gradient-to-br from-emerald-800 to-teal-900 text-white p-8 rounded-[2rem] shadow-xl shadow-emerald-900/20 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+            <div className="md:col-span-3 bg-gradient-to-br from-emerald-800 to-emerald-900 text-white p-8 rounded-[2rem] shadow-xl shadow-emerald-900/20 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -tranemerald-y-1/2 tranemerald-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
               
               <div className="relative z-10">
                 <span className="inline-block px-3 py-1 bg-emerald-950/50 border border-emerald-700/50 rounded-full text-emerald-200 text-xs font-bold tracking-widest uppercase mb-4">
@@ -165,10 +165,10 @@ export default function Dashboard() {
                 p14_10={data.p14_10} p14_50={data.p14_50} p14_90={data.p14_90}
               />
               
-              <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="bg-white rounded-2xl border border-emerald-100 p-5 shadow-sm">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-slate-500 font-medium text-sm">Harga Historis Acuan</span>
-                  <span className="font-bold text-slate-900 text-lg">{formatIDR(data.harga_sekarang)} <span className="text-sm font-normal text-slate-400">/ kg</span></span>
+                  <span className="text-emerald-500 font-medium text-sm">Harga Historis Acuan</span>
+                  <span className="font-bold text-emerald-900 text-lg">{formatIDR(data.harga_sekarang)} <span className="text-sm font-normal text-emerald-400">/ kg</span></span>
                 </div>
               </div>
             </div>

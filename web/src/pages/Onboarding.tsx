@@ -11,11 +11,13 @@ export default function Onboarding() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setSuccess('');
 
     try {
       if (isLogin) {
@@ -26,7 +28,7 @@ export default function Onboarding() {
         if (error) throw error;
         // Opsional: jika Supabase mewajibkan email konfirmasi, beri tahu pengguna
         if (!error && !isLogin) {
-            setError("Berhasil daftar! Silakan cek email Anda untuk konfirmasi (jika diaktifkan), atau coba masuk.");
+            setSuccess("Berhasil daftar! Silakan cek email Anda untuk konfirmasi (jika diaktifkan), atau coba masuk.");
             setIsLogin(true);
             setLoading(false);
             return;
@@ -44,7 +46,7 @@ export default function Onboarding() {
     <div className="min-h-screen bg-emerald-950 flex flex-col justify-center items-center p-6 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
         <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald-800/30 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-10 -left-20 w-80 h-80 bg-teal-900/40 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-10 -left-20 w-80 h-80 bg-emerald-900/40 rounded-full blur-3xl"></div>
       </div>
 
       <div className="z-10 w-full max-w-md animate-in fade-in zoom-in duration-700">
@@ -68,6 +70,13 @@ export default function Onboarding() {
             <div className="mb-6 bg-red-500/20 border border-red-500/50 p-4 rounded-xl text-red-200 text-sm flex items-start gap-3">
               <AlertCircle className="w-5 h-5 shrink-0" />
               <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-6 bg-emerald-500/20 border border-emerald-500/50 p-4 rounded-xl text-emerald-200 text-sm flex items-start gap-3">
+              <Store className="w-5 h-5 shrink-0" />
+              <span>{success}</span>
             </div>
           )}
 
@@ -99,7 +108,7 @@ export default function Onboarding() {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex justify-center items-center gap-2 shadow-[0_0_20px_-5px_rgba(16,185,129,0.5)] disabled:opacity-70 disabled:cursor-not-allowed"
+            className="w-full bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold py-3.5 px-6 rounded-xl transition-all duration-300 flex justify-center items-center gap-2 shadow-[0_0_20px_-5px_rgba(123,91,74,0.5)] disabled:opacity-70 disabled:cursor-not-allowed"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -111,7 +120,7 @@ export default function Onboarding() {
           <div className="mt-6 text-center">
             <button 
               type="button"
-              onClick={() => { setIsLogin(!isLogin); setError(''); }}
+              onClick={() => { setIsLogin(!isLogin); setError(''); setSuccess(''); }}
               className="text-emerald-300/80 hover:text-emerald-300 text-sm font-medium transition-colors"
             >
               {isLogin ? 'Belum punya akun? Daftar di sini.' : 'Sudah punya akun? Masuk.'}

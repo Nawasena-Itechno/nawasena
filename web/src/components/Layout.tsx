@@ -37,8 +37,8 @@ export default function Layout() {
   const isDashboard = location.pathname === '/dashboard' || location.pathname === '/';
   
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-emerald-200">
-      <header className="bg-white/70 backdrop-blur-md border-b border-slate-200 py-4 px-6 sticky top-0 z-50 shadow-sm">
+    <div className="min-h-screen bg-emerald-50 text-emerald-800 font-sans selection:bg-emerald-200">
+      <header className="bg-white/70 backdrop-blur-md border-b border-emerald-200 py-4 px-6 sticky top-0 z-50 shadow-sm">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <Link to={session ? "/dashboard" : "/"} className="text-xl font-black tracking-tight text-emerald-900 flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="bg-emerald-100 p-2 rounded-xl shadow-inner">
@@ -48,22 +48,22 @@ export default function Layout() {
           </Link>
           <nav className="flex items-center gap-8 text-sm font-semibold">
             {session && (
-              <Link to="/dashboard" className={`transition-all duration-300 ${isDashboard ? 'text-emerald-700 relative after:content-[\'\'] after:absolute after:-bottom-5 after:left-0 after:w-full after:h-0.5 after:bg-emerald-500' : 'text-slate-500 hover:text-emerald-600'}`}>
+              <Link to="/dashboard" className={`transition-all duration-300 ${isDashboard ? 'text-emerald-700 relative after:content-[\'\'] after:absolute after:-bottom-5 after:left-0 after:w-full after:h-0.5 after:bg-emerald-500' : 'text-emerald-500 hover:text-emerald-600'}`}>
                 Dasbor Keputusan
               </Link>
             )}
-            <Link to="/metodologi" className={`transition-all duration-300 ${!isDashboard ? 'text-emerald-700 relative after:content-[\'\'] after:absolute after:-bottom-5 after:left-0 after:w-full after:h-0.5 after:bg-emerald-500' : 'text-slate-500 hover:text-emerald-600'}`}>
+            <Link to="/metodologi" className={`transition-all duration-300 ${!isDashboard ? 'text-emerald-700 relative after:content-[\'\'] after:absolute after:-bottom-5 after:left-0 after:w-full after:h-0.5 after:bg-emerald-500' : 'text-emerald-500 hover:text-emerald-600'}`}>
               Metodologi Lomba
             </Link>
             
             {session && (
-              <div className="flex items-center gap-4 ml-4 pl-4 border-l border-slate-200">
-                <span className="text-xs text-slate-400 font-normal hidden sm:inline-block">
+              <div className="flex items-center gap-4 ml-4 pl-4 border-l border-emerald-200">
+                <span className="text-xs text-emerald-400 font-normal hidden sm:inline-block">
                   {session.user.email}
                 </span>
                 <button 
                   onClick={handleLogout}
-                  className="flex items-center gap-2 text-slate-500 hover:text-red-500 transition-colors"
+                  className="flex items-center gap-2 text-emerald-500 hover:text-red-500 transition-colors"
                 >
                   <LogOut className="w-4 h-4" /> Keluar
                 </button>
