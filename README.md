@@ -2,6 +2,12 @@
 
 **Sistem Pendukung Keputusan Pengadaan F&B untuk UMKM**
 
+## 🔗 Tautan Referensi Tambahan
+- 📊 **Data hasil Scrapping & Script Scraper**: [Buka di Google Drive](https://drive.google.com/drive/folders/1J5fgJ6RLhT9gs2N4arSxdQyitZHvTF4Y?usp=sharing)
+- 📄 **Dokumentasi Nawasena (PDF)**: [Buka di Google Drive](https://drive.google.com/file/d/1ulB6FSGwLqkGTyvvw76s8md_UI888CWJ/view?usp=sharing)
+
+---
+
 ## 1. Penjelasan Aplikasi & Solusi
 
 Nawasena (*Navigate Prices, Eliminate Waste*) secara khusus ditujukan bagi pelaku UMKM sektor F&B yang memiliki keterbatasan arus kas (*cash flow*) serta tidak memiliki fasilitas pendingin berstandar industri (*cold storage*) untuk menyimpan stok dalam jumlah besar. Aplikasi ini menjembatani celah dengan mengkalkulasi pertukaran (*trade-off*) antara risiko fluktuasi harga pasar melawan risiko pembusukan bahan segar di dapur.
