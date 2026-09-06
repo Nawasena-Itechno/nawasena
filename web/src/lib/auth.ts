@@ -1,7 +1,9 @@
 // Custom Auth Service (Replaces Supabase Auth)
 // Communicates with our Go backend
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/v1';
+import { API_BASE } from './api';
+
+const API_URL = `${API_BASE}/api/v1`;
 
 export const auth = {
   getToken: () => localStorage.getItem('nawasena_token'),
