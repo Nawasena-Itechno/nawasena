@@ -27,3 +27,5 @@ model/__pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+launch.json

@@ -1,5 +1,199 @@
-/* Custom CSS */
+/* ==========================================================================
+   NAWASENA — Design tokens, motion primitives & global polish
+   Palette: #1B5E20 forest · #66BB6A leaf · #A5D6A7 mint · #E8F5E9 cream · #D3BE6D gold
+   ========================================================================== */
+
+:root {
+  --forest: #1B5E20;
+  --forest-deep: #0D3311;
+  --leaf: #66BB6A;
+  --mint: #A5D6A7;
+  --cream: #E8F5E9;
+  --gold: #D3BE6D;
+  --ink: #10230F;
+  --muted: #5A6B58;
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Offset anchor targets so the sticky header never covers a section title */
+  scroll-padding-top: 88px;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: var(--leaf);
+  color: #fff;
+}
+
+/* --- Scrollbar ----------------------------------------------------------- */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb {
+  background: var(--mint);
+  border: 3px solid var(--cream);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--leaf); }
+
+/* --- Scroll reveal ------------------------------------------------------- */
+/* Sengaja tanpa filter blur: transisi blur pada elemen besar memicu bug
+   compositing (konten bisa hilang total) di sejumlah mesin render. */
+.reveal {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition:
+    opacity 0.7s var(--ease-out-soft),
+    transform 0.7s var(--ease-out-soft);
+}
+.reveal[data-dir='left']  { transform: translate3d(-36px, 0, 0); }
+.reveal[data-dir='right'] { transform: translate3d(36px, 0, 0); }
+.reveal[data-dir='scale'] { transform: scale(0.94); }
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* --- Keyframes ----------------------------------------------------------- */
+@keyframes nw-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-16px) rotate(2deg); }
+}
+@keyframes nw-float-slow {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  50%      { transform: translateY(-26px) translateX(10px); }
+}
+@keyframes nw-pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.75; }
+  70%  { transform: scale(1.9);  opacity: 0; }
+  100% { transform: scale(1.9);  opacity: 0; }
+}
+@keyframes nw-marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes nw-shimmer {
+  from { background-position: -200% 0; }
+  to   { background-position: 200% 0; }
+}
+@keyframes nw-draw {
+  from { stroke-dashoffset: var(--dash, 1200); }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes nw-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes nw-slide-in-right {
+  from { opacity: 0; transform: translateX(48px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes nw-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes nw-spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes nw-bob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(6px); }
+}
+
+.anim-float       { animation: nw-float 7s ease-in-out infinite; }
+.anim-float-slow  { animation: nw-float-slow 11s ease-in-out infinite; }
+.anim-marquee     { animation: nw-marquee 38s linear infinite; }
+.anim-rise        { animation: nw-rise 0.6s var(--ease-out-soft) both; }
+.anim-slide-right { animation: nw-slide-in-right 0.45s var(--ease-out-soft) both; }
+.anim-fade        { animation: nw-fade 0.35s ease-out both; }
+.anim-spin-slow   { animation: nw-spin-slow 26s linear infinite; }
+.anim-bob         { animation: nw-bob 2.4s ease-in-out infinite; }
+.anim-draw        { stroke-dasharray: var(--dash, 1200); animation: nw-draw 2.2s var(--ease-out-soft) both; }
+
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 2px solid currentColor;
+  animation: nw-pulse-ring 2.4s ease-out infinite;
+}
+
+/* --- Surfaces ------------------------------------------------------------ */
+.grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+
+.shimmer-text {
+  background: linear-gradient(100deg, var(--gold) 20%, #FFF6D8 40%, var(--gold) 60%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: nw-shimmer 4.5s linear infinite;
+}
+
+.hairline-grid {
+  background-image:
+    linear-gradient(rgba(27, 94, 32, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(27, 94, 32, 0.06) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* Slider thumbs — the simulator leans on these heavily */
+input[type='range'].nw-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 99px;
+  outline: none;
+  cursor: grab;
+}
+input[type='range'].nw-range:active { cursor: grabbing; }
+input[type='range'].nw-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--forest);
+  box-shadow: 0 3px 12px rgba(13, 51, 17, 0.32);
+  transition: transform 0.18s var(--ease-out-soft), border-color 0.18s;
+}
+input[type='range'].nw-range::-webkit-slider-thumb:hover { transform: scale(1.18); border-color: var(--leaf); }
+input[type='range'].nw-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  border: 5px solid var(--forest);
+  box-shadow: 0 3px 12px rgba(13, 51, 17, 0.32);
+}
+
+/* Hide scrollbar on horizontal chip rails */
+.no-bar { scrollbar-width: none; }
+.no-bar::-webkit-scrollbar { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .anim-float, .anim-float-slow, .anim-marquee, .anim-spin-slow,
+  .anim-bob, .shimmer-text, .pulse-ring::after, .anim-draw {
+    animation: none !important;
+  }
 }

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Store, ArrowRight, AlertCircle, Loader2, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { DEV_BYPASS_AUTH } from '../lib/devAuth';
 
 export default function Onboarding() {
   const navigate = useNavigate();
@@ -10,9 +11,11 @@ export default function Onboarding() {
   const [step, setStep] = useState(1);
   
   // Form State
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [businessName, setBusinessName] = useState('');
+  // Saat bypass aktif, form diisi otomatis agar validasi `required` bawaan
+  // browser lolos dan tombol Masuk cukup diklik sekali tanpa mengetik apa pun.
+  const [email, setEmail] = useState(DEV_BYPASS_AUTH ? 'dev@nawasena.local' : '');
+  const [password, setPassword] = useState(DEV_BYPASS_AUTH ? 'devpassword' : '');
+  const [businessName, setBusinessName] = useState(DEV_BYPASS_AUTH ? 'Warteg Nawasena (Dev)' : '');
   const [fnbCategory, setFnbCategory] = useState('Warteg');
   const [referenceMarket, setReferenceMarket] = useState('Pasar Induk Kramat Jati');
   const [weeklyConsumption, setWeeklyConsumption] = useState(10);
@@ -23,6 +26,13 @@ export default function Onboarding() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Mode development: lewati Supabase sepenuhnya, langsung ke dasbor.
+    if (DEV_BYPASS_AUTH) {
+      navigate('/dashboard');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
@@ -38,9 +48,18 @@ export default function Onboarding() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Mode development: tidak memanggil signUp(), jadi tidak ada email
+    // konfirmasi yang dikirim dan rate limit Supabase tidak tersentuh.
+    if (DEV_BYPASS_AUTH) {
+      setSuccess('Registrasi dilewati (mode development). Mengalihkan...');
+      setTimeout(() => navigate('/dashboard'), 800);
+      return;
+    }
+
     setLoading(true);
     setError('');
-    
+
     try {
       // 1. Sign up user
       const { data, error: authError } = await supabase.auth.signUp({ email, password });
