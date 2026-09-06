@@ -2,7 +2,7 @@
 
 export const API_BASE: string =
   (import.meta.env.VITE_API_BASE as string | undefined)?.replace(/\/$/, '') ||
-  'http://localhost:8080';
+  (import.meta.env.DEV ? 'http://localhost:8080' : '');
 
 export interface MasterCommodity {
   id: string;
