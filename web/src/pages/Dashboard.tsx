@@ -17,7 +17,6 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
-import { DEV_BYPASS_AUTH, DEV_PROFILE } from '../lib/devAuth';
 import { normalizeProfile, shelfLifeOf, TRACKED_COMMODITIES } from '../lib/profile';
 import type { UmkmProfile } from '../lib/profile';
 import { fetchProcurementCard } from '../lib/api';
@@ -59,10 +58,6 @@ export default function Dashboard() {
   /* ── Profil pengguna ─────────────────────────────────────────────────── */
   useEffect(() => {
     const load = async () => {
-      if (DEV_BYPASS_AUTH) {
-        setProfile(normalizeProfile(DEV_PROFILE));
-        return;
-      }
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -73,7 +68,9 @@ export default function Dashboard() {
       const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
       setProfile(normalizeProfile(prof));
     };
-    load().catch(() => setProfile(normalizeProfile(null)));
+    // Kegagalan memuat sesi tidak boleh berujung pada profil bawaan: pengguna
+    // dikembalikan ke halaman masuk agar dasbor tidak pernah terbuka tanpa akun.
+    load().catch(() => navigate('/login'));
   }, [navigate]);
 
   // Komoditas aktif selalu diambil dari daftar komoditas rutin milik pengguna.

@@ -1,7 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { DEV_BYPASS_AUTH, DEV_SESSION } from '../lib/devAuth';
 import type { Session } from '@supabase/supabase-js';
 import SiteHeader from './SiteHeader';
 import SiteFooter from './SiteFooter';
@@ -11,14 +10,8 @@ const PUBLIC_PATHS = ['/', '/ensiklopedia', '/simulator', '/metodologi'];
 export default function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [, setSession] = useState<Session | null>(DEV_BYPASS_AUTH ? DEV_SESSION : null);
-
   useEffect(() => {
-    // Mode development: jangan pasang guard sesi, jangan redirect.
-    if (DEV_BYPASS_AUTH) return;
-
     const guard = (session: Session | null) => {
-      setSession(session);
       if (!session && !PUBLIC_PATHS.includes(location.pathname)) navigate('/');
     };
 

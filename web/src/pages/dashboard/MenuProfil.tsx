@@ -15,7 +15,6 @@ import {
 import type { UmkmProfile, StorageMethod } from '../../lib/profile';
 import { STORAGE_METHODS, TRACKED_COMMODITIES, storageOf } from '../../lib/profile';
 import { supabase } from '../../lib/supabase';
-import { DEV_BYPASS_AUTH } from '../../lib/devAuth';
 import { formatNumber, formatPct } from '../../lib/format';
 import { InfoPop, SectionHead } from '../../components/dashboard/ui';
 import { Reveal } from '../../components/motion/Reveal';
@@ -69,27 +68,24 @@ export default function MenuProfil({
     };
 
     try {
-      if (!DEV_BYPASS_AUTH && bersih.id) {
-        const { error } = await supabase
-          .from('profiles')
-          .update({
-            business_name: bersih.business_name,
-            fnb_category: bersih.fnb_category,
-            reference_market: bersih.reference_market,
-            weekly_consumption_kg: bersih.weekly_consumption_kg,
-            storage_method: bersih.storage_method,
-            daily_decay_rate: bersih.daily_decay_rate,
-          })
-          .eq('id', bersih.id);
-        if (error) throw error;
-      }
+      if (!bersih.id) throw new Error('Profil usaha belum terhubung dengan akun Anda.');
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          business_name: bersih.business_name,
+          fnb_category: bersih.fnb_category,
+          reference_market: bersih.reference_market,
+          weekly_consumption_kg: bersih.weekly_consumption_kg,
+          storage_method: bersih.storage_method,
+          daily_decay_rate: bersih.daily_decay_rate,
+        })
+        .eq('id', bersih.id);
+      if (error) throw error;
+
       onChange(bersih);
       setEdit(false);
-      setPesan(
-        DEV_BYPASS_AUTH
-          ? 'Perubahan diterapkan pada sesi ini (mode pengembangan, tidak menyentuh basis data).'
-          : 'Perubahan tersimpan. Seluruh rekomendasi dihitung ulang.'
-      );
+      setPesan('Perubahan tersimpan. Seluruh rekomendasi dihitung ulang.');
     } catch (err) {
       setPesan(`Gagal menyimpan: ${(err as Error).message}`);
     } finally {
