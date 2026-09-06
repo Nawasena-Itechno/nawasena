@@ -2,31 +2,35 @@
 
 **Sistem Pendukung Keputusan Pengadaan F&B untuk UMKM**
 
-## 1. Penjelasan Aplikasi
+## 1. Penjelasan Aplikasi & Solusi
 
-Nawasena (*Navigate Prices, Eliminate Waste*) adalah platform berbasis web yang dirancang khusus untuk membantu pelaku UMKM kuliner (warung, restoran, katering) dalam menghadapi inflasi harga pangan dan meminimalkan pemborosan stok. 
+Nawasena (*Navigate Prices, Eliminate Waste*) secara khusus ditujukan bagi pelaku UMKM sektor F&B yang memiliki keterbatasan arus kas (*cash flow*) serta tidak memiliki fasilitas pendingin berstandar industri (*cold storage*) untuk menyimpan stok dalam jumlah besar. Aplikasi ini menjembatani celah dengan mengkalkulasi pertukaran (*trade-off*) antara risiko fluktuasi harga pasar melawan risiko pembusukan bahan segar di dapur.
 
-**Latar Belakang:** UMKM kuliner seringkali berbelanja bahan baku (terutama bahan segar seperti cabai yang harganya sangat fluktuatif) secara tebak-tebakan. Akibatnya, mereka sering menimbun saat harga murah namun berujung busuk, atau membeli sedikit namun kehabisan saat harga sedang mahal. 
+Nawasena bertindak sebagai **Decision Support System (DSS)**. Sistem akan memprediksi harga dalam bentuk rentang probabilitas, lalu rentang tersebut dimasukkan ke dalam lapisan optimisasi persediaan stokastik. Hasilnya, Nawasena tidak sekadar mendorong transaksi belanja, melainkan berani menyarankan UMKM untuk berhenti menimbun jika memang tidak menguntungkan secara matematis, demi menyelamatkan arus kas dan menekan limbah pangan (*food loss and waste*).
 
-**Tujuan:** Aplikasi ini bertujuan untuk memberikan landasan keputusan (berbasis data dan AI) bagi UMKM dalam menjawab pertanyaan: *"Kapan harus belanja, berapa banyak yang harus dibeli, dan bagaimana cara menyimpannya agar kerugian finansial akibat busuk dan inflasi bisa ditekan seminimal mungkin?"*
+**Tujuan Utama:** Memberikan prediksi harga pangan sekaligus instruksi rekomendasi kuantitas pengadaan (dalam Kg) yang dipersonalisasi secara presisi sesuai laju pemakaian harian dan metode penyimpanan masing-masing usaha.
 
 **Keterkaitan dengan *Sustainable Development Goals* (SDGs):**
-Aplikasi Nawasena sejalan dengan agenda global SDGs, secara spesifik:
-- 🎯 **SDG 8 (Pekerjaan Layak dan Pertumbuhan Ekonomi)** — *(Fokus Utama)* Melindungi UMKM dari kebangkrutan akibat guncangan harga pangan, memastikan keberlanjutan bisnis, dan mendorong pertumbuhan ekonomi mikro yang tangguh.
-- 🏙️ **SDG 11 (Kota dan Permukiman yang Berkelanjutan)** — Menciptakan ekosistem rantai pasok pangan perkotaan yang lebih efisien dengan mengurangi penumpukan limbah organik ( *food waste*) dari sisa bahan baku UMKM yang membusuk.
+- 🎯 **SDG 8 (Decent Work & Economic Growth)** — *(Fokus Utama)* Melindungi UMKM dari kerugian akibat guncangan harga pangan.
+- 🏙️ **SDG 11 (Sustainable Cities & Communities)** — Mengurangi penumpukan limbah organik (*food waste*) dari sisa bahan baku UMKM yang membusuk.
 
 ---
 
 ## 2. Fitur Utama
 
-Keunggulan dan pembeda utama Nawasena dibandingkan aplikasi kasir atau pencatatan stok biasa adalah integrasi 3 lapisan kecerdasan:
+Keunggulan dan pembeda utama Nawasena adalah secara proaktif langsung menerjemahkan data teknis prediksi pasar yang rumit menjadi perintah harian yang tegas untuk operasional UMKM:
 
-1. **Prediksi Harga Kuantil (Model Statistik Buatan Sendiri)** 
-   Menggunakan model *Filtered Historical Simulation (FHS)* berbasis Python untuk memprediksi rentang harga komoditas (skenario optimis, normal, pesimis) hingga 14 hari ke depan berdasarkan data PIHPS Bank Indonesia.
-2. **Simulasi Fisika Susut Stok** 
-   Nawasena tidak hanya mencatat jumlah barang, tetapi *menghitung secara matematis* laju pembusukan bahan baku (peluruhan eksponensial) berdasarkan metode penyimpanan (Suhu Ruang, Chiller, Kedap Udara).
-3. **Analisis Keputusan AI (Generative AI)**
-   Menggunakan **Google Gemini** untuk menganalisis data prediksi harga dan kondisi stok yang membusuk, lalu secara otomatis menghasilkan rekomendasi tindakan konkret (contoh: *"Tunda beli cabai karena besok harga diprediksi turun, gunakan sisa stok dengan resep X"*).
+1. **Rekomendasi Belanja Hari Ini (Core Decision Card)** 
+   Sistem memberikan instruksi operasional yang tegas, seperti: "Beli X kg hari ini, cukup untuk 1 minggu" atau menyarankan borong 2 minggu jika diprediksi ada lonjakan harga. Fitur ini secara otomatis membandingkan ekspektasi biaya untuk memutuskan mana yang lebih menguntungkan: belanja seperlunya agar terhindar dari bahan busuk, atau memborong agar terhindar dari inflasi pasar. Pengguna langsung melihat estimasi uang yang berhasil dihemat.
+
+2. **Radar Harga Pangan & Anggaran Usaha** 
+   Fitur perencana keuangan dapur usaha. Untuk jangka pendek (1–2 minggu), sistem menampilkan prediksi rentang harga batas atas (P90) dan batas bawah (P10). Untuk jangka menengah (1–3 bulan), terdapat Kalender Musiman yang mendeteksi bulan rawan, serta Kalkulator Anggaran yang membantu memperkirakan kebutuhan dana kas (anggaran P50 dan dana cadangan) untuk bulan depan.
+
+3. **Sinyal Alih Varian (Substitusi Cerdas)** 
+   Jika sistem mendeteksi perbedaan rasio harga yang terlalu ekstrem (anomali) antar varian komoditas sejenis, sistem akan merekomendasikan penyesuaian resep. Misalnya, menyarankan mencampur 30% Cabai Rawit Hijau saat Cabai Rawit Merah melambung tinggi. Ini memungkinkan UMKM berhemat puluhan ribu rupiah tanpa mengorbankan fungsi dan cita rasa.
+
+4. **Kalkulator Pembusukan & Solusi Olahan (AI Generatif)**
+   Menekan angka bahan terbuang (*food waste*). Terdapat kurva peluruhan yang memantau penyusutan umur bahan dari hari ke-1 hingga hari ke-14 sesuai metode penyimpanan. Jika harga pasar anjlok murah, sistem menggunakan Model Bahasa Besar (LLM) untuk memberikan "Katalog Solusi Pengolahan" sehingga UMKM bisa memborong dan mengawetkannya (contoh: *chili oil*, cabai kering) tanpa khawatir kebusukan.
 
 ---
 
