@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, ShieldCheck, Database, BarChart3, Users, MapPin, Activity, TrendingUp } from 'lucide-react';
+import WasteSimulator from '../components/public/WasteSimulator';
+import CommodityHub from '../components/public/CommodityHub';
 
 export default function Landing() {
   return (
@@ -124,8 +126,35 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Nilai Inti / Core Pillars (Corporate Style) */}
+      {/* Ensiklopedia Komoditas Volatil */}
+      <section className="py-24 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="max-w-3xl mb-12">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Ensiklopedia Komoditas Volatil</h2>
+            <div className="w-20 h-1.5 bg-emerald-600 mb-6"></div>
+            <p className="text-slate-600 text-lg">
+              Pemantauan tingkat volatilitas bahan pangan segar secara real-time. Status dikalkulasi berdasarkan standar deviasi historis 90 hari terakhir.
+            </p>
+          </div>
+          <CommodityHub />
+        </div>
+      </section>
+
+      {/* Simulator Kerugian Dapur */}
       <section className="py-24 bg-slate-50 border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Simulator Kerugian Finansial Dapur</h2>
+            <p className="text-slate-600 text-lg">
+              Menimbun bahan pangan saat harga murah belum tentu menguntungkan jika metode penyimpanan Anda tidak memadai. Coba simulasikan kerugian riil Anda di bawah ini.
+            </p>
+          </div>
+          <WasteSimulator />
+        </div>
+      </section>
+
+      {/* Nilai Inti / Core Pillars (Corporate Style) */}
+      <section className="py-24 bg-white border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-16">
             <h2 className="text-3xl font-bold text-slate-900 mb-4">Pilar Akuntabilitas dan Presisi</h2>

@@ -33,10 +33,12 @@ type RecommendResponse struct {
 }
 
 func SetupRoutes(r chi.Router) {
-	r.Post("/api/recommend", handleRecommend)
+	r.Post("/api/v1/umkm/procurement-card", handleProcurementCard)
+	r.Post("/api/v1/public/simulate-waste", handleSimulateWaste)
+	r.Get("/api/v1/public/market-radar", handleMarketRadar)
 }
 
-func handleRecommend(w http.ResponseWriter, r *http.Request) {
+func handleProcurementCard(w http.ResponseWriter, r *http.Request) {
 	var req RecommendRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -75,3 +77,96 @@ func handleRecommend(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(res)
 }
+
+type SimulateWasteRequest struct {
+	CommodityID   string  `json:"commodity_id"`
+	WeightKg      float64 `json:"weight_kg"`
+	StorageMethod string  `json:"storage_method"`
+	DurationDays  int     `json:"duration_days"`
+}
+
+type SimulateWasteResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		InitialWeightKg             float64 `json:"initial_weight_kg"`
+		UsableWeightKg              float64 `json:"usable_weight_kg"`
+		WasteLossKg                 float64 `json:"waste_loss_kg"`
+		CashLossIdr                 float64 `json:"cash_loss_idr"`
+		BreakevenPriceHikeRequired  float64 `json:"breakeven_price_hike_required_pct"`
+		HistoricalSpikeProbability  float64 `json:"historical_spike_probability_pct"`
+	} `json:"data"`
+}
+
+func handleSimulateWaste(w http.ResponseWriter, r *http.Request) {
+	var req SimulateWasteRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	decayRate := 0.03
+	if req.StorageMethod == "chiller" {
+		decayRate = 0.015
+	} else if req.StorageMethod == "airtight" {
+		decayRate = 0.005
+	}
+
+	// Calculate loss
+	var usable float64 = req.WeightKg
+	for i := 0; i < req.DurationDays; i++ {
+		usable = usable * (1 - decayRate)
+	}
+	waste := req.WeightKg - usable
+	
+	// Assume price = 44000 for rawit merah
+	price := 44000.0
+	cashLoss := waste * price
+
+	hikeReq := (waste / usable) * 100
+	prob := 2.1
+	if hikeReq > 10 {
+		prob = 1.5
+	}
+	if hikeReq > 20 {
+		prob = 0.5
+	}
+
+	res := SimulateWasteResponse{Status: "success"}
+	res.Data.InitialWeightKg = req.WeightKg
+	res.Data.UsableWeightKg = usable
+	res.Data.WasteLossKg = waste
+	res.Data.CashLossIdr = cashLoss
+	res.Data.BreakevenPriceHikeRequired = hikeReq
+	res.Data.HistoricalSpikeProbability = prob
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+type MarketRadarResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		CommodityID      string  `json:"commodity_id"`
+		CommodityName    string  `json:"commodity_name"`
+		CurrentPrice     float64 `json:"current_price"`
+		LastYearPrice    float64 `json:"last_year_price"`
+		YoyChangePct     float64 `json:"yoy_change_pct"`
+		VolatilityStatus string  `json:"volatility_status"`
+	} `json:"data"`
+}
+
+func handleMarketRadar(w http.ResponseWriter, r *http.Request) {
+	// Dummy data for now based on spec
+	res := MarketRadarResponse{Status: "success"}
+	res.Data.CommodityID = "chili_rawit_red"
+	res.Data.CommodityName = "Cabai Rawit Merah"
+	res.Data.CurrentPrice = 44000
+	res.Data.LastYearPrice = 38500
+	res.Data.YoyChangePct = 14.28
+	res.Data.VolatilityStatus = "HIGH"
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(res)
+}
+
+
