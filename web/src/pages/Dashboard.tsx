@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Sprout,
+
   ShoppingBasket,
   Radar,
   Shuffle,
@@ -16,8 +16,8 @@ import {
   CalendarClock,
   RefreshCw,
 } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { normalizeProfile, shelfLifeOf, TRACKED_COMMODITIES } from '../lib/profile';
+import { auth } from '../lib/auth';
+import { normalizeProfile, shelfLifeOf } from '../lib/profile';
 import type { UmkmProfile } from '../lib/profile';
 import { fetchProcurementCard } from '../lib/api';
 import type { ProcurementResponse } from '../lib/api';
@@ -27,6 +27,7 @@ import MenuSubstitusi from './dashboard/MenuSubstitusi';
 import MenuSimulasiSusut from './dashboard/MenuSimulasiSusut';
 import MenuProfil from './dashboard/MenuProfil';
 import MenuInformasi from './dashboard/MenuInformasi';
+import LogoMark from '../assets/nawasena-logo-logo.svg';
 
 /** Rentang tanggal yang tercakup basis data harga PIHPS milik sistem. */
 export const DATA_RANGE = { min: '2018-04-01', max: '2026-08-28' };
@@ -53,20 +54,22 @@ export default function Dashboard() {
   const [error, setError] = useState('');
 
   const [asOf, setAsOf] = useState(DATA_RANGE.max);
-  const [komoditas, setKomoditas] = useState<string>(TRACKED_COMMODITIES[0]);
+  const [komoditas, setKomoditas] = useState<string>('');
 
   /* ── Profil pengguna ─────────────────────────────────────────────────── */
   useEffect(() => {
     const load = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
+      if (!auth.isAuthenticated()) {
         navigate('/login');
         return;
       }
-      const { data: prof } = await supabase.from('profiles').select('*').eq('id', user.id).single();
-      setProfile(normalizeProfile(prof));
+      try {
+        const prof = await auth.fetchAuth('/auth/me');
+        setProfile(normalizeProfile(prof));
+      } catch (err) {
+        auth.clearToken();
+        navigate('/login');
+      }
     };
     // Kegagalan memuat sesi tidak boleh berujung pada profil bawaan: pengguna
     // dikembalikan ke halaman masuk agar dasbor tidak pernah terbuka tanpa akun.
@@ -75,8 +78,8 @@ export default function Dashboard() {
 
   // Komoditas aktif selalu diambil dari daftar komoditas rutin milik pengguna.
   useEffect(() => {
-    if (profile && profile.commodities.length > 0 && !profile.commodities.includes(komoditas)) {
-      setKomoditas(profile.commodities[0]);
+    if (profile && profile.commodities.length > 0 && !profile.commodities.some(c => c.name === komoditas)) {
+      setKomoditas(profile.commodities[0].name);
     }
   }, [profile, komoditas]);
 
@@ -87,11 +90,13 @@ export default function Dashboard() {
       setLoading(true);
       setError('');
       try {
+        const activeCommodity = profile.commodities.find(c => c.name === komoditas);
+        const cons = activeCommodity ? activeCommodity.weekly_consumption_kg : 10;
         const json = await fetchProcurementCard(
           {
             komoditas,
             provinsi: 'Jawa Barat',
-            pemakaian: profile.weekly_consumption_kg,
+            pemakaian: cons,
             laju_susut: profile.daily_decay_rate,
             umur_simpan: shelfLifeOf(profile.storage_method),
             as_of: asOf,
@@ -150,8 +155,8 @@ export default function Dashboard() {
 
         <div className="relative flex items-center justify-between border-b border-[#1B5E20] px-5 py-5">
           <div className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#66BB6A]">
-              <Sprout className="h-5 w-5 text-[#0D3311]" />
+            <span className="flex h-9 w-9 items-center justify-center">
+              <img src={LogoMark} alt="Logo Nawasena" className="h-full w-full object-contain drop-shadow-md" />
             </span>
             <div className="leading-none">
               <p className="font-display text-lg font-black text-white">Nawasena</p>
@@ -227,8 +232,8 @@ export default function Dashboard() {
 
         <div className="relative border-t border-[#1B5E20] p-4">
           <button
-            onClick={async () => {
-              await supabase.auth.signOut();
+            onClick={() => {
+              auth.clearToken();
               navigate('/');
             }}
             className="flex w-full items-center gap-3 rounded-2xl px-4 py-2.5 text-sm font-semibold text-[#8FBF8F] transition-colors hover:bg-[#5A1F14]/40 hover:text-[#FFB4A2]"
@@ -274,13 +279,11 @@ export default function Dashboard() {
                 onChange={(e) => setKomoditas(e.target.value)}
                 className="bg-transparent text-sm font-bold text-[#0D3311] outline-none"
               >
-                {(profile.commodities.length ? profile.commodities : [...TRACKED_COMMODITIES]).map(
-                  (k) => (
-                    <option key={k} value={k}>
-                      {k}
+                {profile.commodities.map((k) => (
+                    <option key={k.name} value={k.name}>
+                      {k.name}
                     </option>
-                  )
-                )}
+                ))}
               </select>
             </label>
 

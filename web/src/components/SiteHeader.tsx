@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Menu, X, Sprout, ArrowUpRight } from 'lucide-react';
+import { Menu, X, ArrowUpRight } from 'lucide-react';
 import { useScrollProgress } from './motion/hooks';
+
+import LogoMark from '../assets/nawasena-logo-logo.svg';
 
 const NAV = [
   { to: '/', label: 'Beranda', end: true },
@@ -44,11 +46,9 @@ export default function SiteHeader({ variant = 'auto' }: { variant?: 'auto' | 's
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-3.5 lg:px-8">
           <Link to="/" className="group flex items-center gap-3">
             <span
-              className={`relative grid h-11 w-11 place-items-center rounded-2xl shadow-[0_10px_24px_-12px_rgba(27,94,32,0.9)] transition-transform duration-500 group-hover:-rotate-6 ${
-                onDark ? 'bg-[#66BB6A]' : 'bg-[#1B5E20]'
-              }`}
+              className="relative flex h-10 w-10 items-center justify-center transition-transform duration-500 group-hover:-rotate-6"
             >
-              <Sprout className={`h-6 w-6 ${onDark ? 'text-[#0D3311]' : 'text-[#A5D6A7]'}`} />
+              <img src={LogoMark} alt="Logo Nawasena" className="h-full w-full object-contain drop-shadow-md" />
               <span
                 className={`absolute -right-1 -top-1 h-3 w-3 rounded-full bg-[#D3BE6D] ring-2 ${
                   onDark ? 'ring-[#0D3311]' : 'ring-[#F8FCF8]'

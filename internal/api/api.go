@@ -54,9 +54,20 @@ type TitikHarga struct {
 }
 
 func SetupRoutes(r chi.Router) {
-	r.Post("/api/v1/umkm/procurement-card", handleProcurementCard)
+	// Public routes
+	r.Get("/api/v1/public/metadata", handleGetMetadata)
 	r.Post("/api/v1/public/simulate-waste", handleSimulateWaste)
 	r.Get("/api/v1/public/market-radar", handleMarketRadar)
+
+	// Auth routes
+	r.Post("/api/v1/auth/register", handleRegisterAuth)
+	r.Post("/api/v1/auth/login", handleLoginAuth)
+	r.Get("/api/v1/auth/me", handleGetProfile)
+	r.Put("/api/v1/auth/profile", handleUpdateProfile)
+
+	// Protected routes (for demo, handled in frontend, but could add middleware)
+	r.Post("/api/v1/umkm/procurement-card", handleProcurementCard)
+	r.Post("/api/v1/umkm/ai-solusi", handleAiSolusi)
 }
 
 func handleProcurementCard(w http.ResponseWriter, r *http.Request) {

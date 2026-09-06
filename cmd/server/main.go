@@ -19,6 +19,7 @@ import (
 func main() {
 	_ = godotenv.Load()
 	store.InitStore()
+	store.InitDB()
 
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)

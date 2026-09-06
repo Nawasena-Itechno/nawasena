@@ -1,28 +1,29 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Session } from '@supabase/supabase-js';
+import { auth } from '../lib/auth';
 import SiteHeader from './SiteHeader';
 import SiteFooter from './SiteFooter';
 
-const PUBLIC_PATHS = ['/', '/ensiklopedia', '/simulator', '/metodologi'];
-
 export default function Layout() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
+
   useEffect(() => {
-    const guard = (session: Session | null) => {
-      if (!session && !PUBLIC_PATHS.includes(location.pathname)) navigate('/');
-    };
+    // Scroll to top on route change
+    window.scrollTo(0, 0);
 
-    supabase.auth.getSession().then(({ data: { session } }) => guard(session));
+    // Auth Guard
+    const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/register-umkm';
+    const isPublicRoute = location.pathname === '/' || location.pathname === '/encyclopedia' || location.pathname === '/simulator' || location.pathname === '/methodology';
+    
+    const token = auth.getToken();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => guard(session));
-
-    return () => subscription.unsubscribe();
-  }, [navigate, location.pathname]);
+    if (!token && !isAuthRoute && !isPublicRoute) {
+      navigate('/login');
+    } else if (token && isAuthRoute) {
+      navigate('/dashboard');
+    }
+  }, [location.pathname, navigate]);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#F8FCF8] text-[#25422A]">

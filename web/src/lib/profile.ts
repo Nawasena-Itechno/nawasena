@@ -2,15 +2,18 @@
 
 export type StorageMethod = 'room' | 'chiller' | 'airtight';
 
+export interface CommodityConsumption {
+  name: string;
+  weekly_consumption_kg: number;
+}
+
 export interface UmkmProfile {
   id?: string;
   business_name: string;
   fnb_category: string;
   reference_market: string;
-  /** Komoditas yang rutin dipakai usaha (nama sesuai data PIHPS). */
-  commodities: string[];
-  /** D — pemakaian rata-rata dalam kg per minggu. */
-  weekly_consumption_kg: number;
+  /** Komoditas yang rutin dipakai usaha beserta volumenya. */
+  commodities: CommodityConsumption[];
   storage_method: StorageMethod;
   /** s — laju susut harian; diturunkan dari metode simpan saat onboarding. */
   daily_decay_rate: number;
@@ -73,13 +76,6 @@ export function shelfLifeOf(method: string): number {
   return storageOf(method).shelfLife;
 }
 
-/** Komoditas yang datanya tersedia di basis harga PIHPS milik sistem. */
-export const TRACKED_COMMODITIES = [
-  'Cabai Rawit Merah',
-  'Cabai Rawit Hijau',
-  'Cabai Merah Keriting',
-  'Cabai Merah Besar',
-] as const;
 
 /**
  * Melengkapi profil yang datang dari DB atau profil tiruan agar bidang barunya
@@ -97,11 +93,7 @@ export function normalizeProfile(raw: ProfilMentah | null): UmkmProfile {
     business_name: raw?.business_name || 'Usaha Anda',
     fnb_category: raw?.fnb_category || 'Warteg',
     reference_market: raw?.reference_market || 'Pasar Tradisional',
-    commodities:
-      raw?.commodities && raw.commodities.length > 0
-        ? raw.commodities
-        : ['Cabai Rawit Merah', 'Cabai Merah Keriting'],
-    weekly_consumption_kg: raw?.weekly_consumption_kg ?? 10,
+    commodities: raw?.commodities && raw.commodities.length > 0 ? raw.commodities : [],
     storage_method: method,
     daily_decay_rate: raw?.daily_decay_rate ?? meta.decay,
   };

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Store,
   Pencil,
@@ -13,21 +13,15 @@ import {
   Loader2,
 } from 'lucide-react';
 import type { UmkmProfile, StorageMethod } from '../../lib/profile';
-import { STORAGE_METHODS, TRACKED_COMMODITIES, storageOf } from '../../lib/profile';
-import { supabase } from '../../lib/supabase';
-import { formatNumber, formatPct } from '../../lib/format';
+import { STORAGE_METHODS, storageOf } from '../../lib/profile';
+import { fetchMetadata } from '../../lib/api';
+import type { MetadataResponse } from '../../lib/api';
+import { auth } from '../../lib/auth';
+import { formatPct } from '../../lib/format';
 import { InfoPop, SectionHead } from '../../components/dashboard/ui';
 import { Reveal } from '../../components/motion/Reveal';
 
-const KATEGORI = [
-  'Warteg',
-  'Kedai Ayam Geprek',
-  'Sambal Bakar',
-  'Katering',
-  'Rumah Makan Padang',
-  'Kedai Mi & Bakso',
-  'Lainnya',
-];
+// KATEGORI removed in favor of dynamic metadata
 
 export default function MenuProfil({
   profile,
@@ -40,6 +34,11 @@ export default function MenuProfil({
   const [draft, setDraft] = useState<UmkmProfile>(profile);
   const [menyimpan, setMenyimpan] = useState(false);
   const [pesan, setPesan] = useState('');
+  const [metadata, setMetadata] = useState<MetadataResponse | null>(null);
+
+  useEffect(() => {
+    fetchMetadata().then(setMetadata).catch(console.error);
+  }, []);
 
   const simpan = storageOf(profile.storage_method);
 
@@ -62,26 +61,21 @@ export default function MenuProfil({
     // Laju susut selalu mengikuti metode simpan agar tidak pernah bertentangan.
     const bersih: UmkmProfile = {
       ...draft,
-      weekly_consumption_kg: Math.max(0.5, Number(draft.weekly_consumption_kg) || 0.5),
-      daily_decay_rate: STORAGE_METHODS[draft.storage_method].decay,
-      commodities: draft.commodities.length > 0 ? draft.commodities : [TRACKED_COMMODITIES[0]],
+      daily_decay_rate: metadata?.storage_methods.find(s => s.id === draft.storage_method)?.daily_decay_rate ?? STORAGE_METHODS[draft.storage_method]?.decay ?? 0.015,
+      commodities: draft.commodities.length > 0 ? draft.commodities : (metadata?.commodities.length ? [{ name: metadata.commodities[0].name, weekly_consumption_kg: 5 }] : []),
     };
 
     try {
-      if (!bersih.id) throw new Error('Profil usaha belum terhubung dengan akun Anda.');
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      await auth.fetchAuth('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
           business_name: bersih.business_name,
           fnb_category: bersih.fnb_category,
           reference_market: bersih.reference_market,
-          weekly_consumption_kg: bersih.weekly_consumption_kg,
+          commodities: bersih.commodities,
           storage_method: bersih.storage_method,
-          daily_decay_rate: bersih.daily_decay_rate,
-        })
-        .eq('id', bersih.id);
-      if (error) throw error;
+        }),
+      });
 
       onChange(bersih);
       setEdit(false);
@@ -96,9 +90,16 @@ export default function MenuProfil({
   const toggleKomoditas = (k: string) => {
     setDraft((d) => ({
       ...d,
-      commodities: d.commodities.includes(k)
-        ? d.commodities.filter((x) => x !== k)
-        : [...d.commodities, k],
+      commodities: d.commodities.some((x) => x.name === k)
+        ? d.commodities.filter((x) => x.name !== k)
+        : [...d.commodities, { name: k, weekly_consumption_kg: 5 }],
+    }));
+  };
+
+  const ubahKonsumsi = (k: string, kg: number) => {
+    setDraft((d) => ({
+      ...d,
+      commodities: d.commodities.map((x) => (x.name === k ? { ...x, weekly_consumption_kg: kg } : x)),
     }));
   };
 
@@ -139,10 +140,9 @@ export default function MenuProfil({
           </div>
 
           <p className="relative mt-5 max-w-3xl rounded-2xl bg-white/10 p-4 text-sm leading-relaxed text-[#C8E6C9]">
-            Empat nilai di halaman ini — pemakaian mingguan, metode simpan, komoditas rutin, dan
-            pasar acuan — adalah satu-satunya masukan yang dipakai seluruh dasbor. Setiap kali Anda
-            mengubahnya, rekomendasi kilogram, anggaran bulanan, dan simulasi susut ikut dihitung
-            ulang.
+            Tiga nilai utama di halaman ini — metode simpan, daftar komoditas beserta pemakaian mingguan, dan
+            pasar acuan — adalah masukan yang dipakai seluruh dasbor. Setiap kali Anda
+            mengubahnya, rekomendasi kilogram, anggaran bulanan, dan simulasi susut ikut dihitung ulang.
           </p>
         </section>
       </Reveal>
@@ -184,35 +184,25 @@ export default function MenuProfil({
                   onChange={(e) => setDraft({ ...draft, fnb_category: e.target.value })}
                   className="w-full rounded-2xl border border-[#A5D6A7] bg-[#F8FCF8] px-4 py-3 text-sm font-semibold text-[#0D3311] outline-none focus:border-[#1B5E20]"
                 >
-                  {KATEGORI.map((k) => (
-                    <option key={k}>{k}</option>
+                  {metadata?.categories.map((k) => (
+                    <option key={k.id}>{k.name}</option>
                   ))}
                 </select>
               </Field>
 
               <Field label="Pasar acuan belanja">
-                <input
+                <select
                   value={draft.reference_market}
                   onChange={(e) => setDraft({ ...draft, reference_market: e.target.value })}
                   className="w-full rounded-2xl border border-[#A5D6A7] bg-[#F8FCF8] px-4 py-3 text-sm font-semibold text-[#0D3311] outline-none transition-colors focus:border-[#1B5E20] focus:ring-4 focus:ring-[#66BB6A]/20"
-                />
+                >
+                  {metadata?.markets.map((m) => (
+                    <option key={m.id} value={m.name}>{m.name}</option>
+                  ))}
+                </select>
               </Field>
 
-              <Field
-                label="Kebutuhan rutin (kg / minggu)"
-                hint="Rata-rata pemakaian dapur, bukan jumlah belanja."
-              >
-                <input
-                  type="number"
-                  min={0.5}
-                  step={0.5}
-                  value={draft.weekly_consumption_kg}
-                  onChange={(e) =>
-                    setDraft({ ...draft, weekly_consumption_kg: Number(e.target.value) })
-                  }
-                  className="w-full rounded-2xl border border-[#A5D6A7] bg-[#F8FCF8] px-4 py-3 font-mono text-sm font-bold text-[#0D3311] outline-none transition-colors focus:border-[#1B5E20] focus:ring-4 focus:ring-[#66BB6A]/20"
-                />
-              </Field>
+
             </div>
 
             <div className="mt-6">
@@ -222,13 +212,12 @@ export default function MenuProfil({
                 perhitungan.
               </p>
               <div className="mt-3 space-y-2.5">
-                {(Object.keys(STORAGE_METHODS) as StorageMethod[]).map((key) => {
-                  const m = STORAGE_METHODS[key];
-                  const on = draft.storage_method === key;
+                {metadata?.storage_methods.map((m) => {
+                  const on = draft.storage_method === m.id;
                   return (
                     <button
-                      key={key}
-                      onClick={() => setDraft({ ...draft, storage_method: key, daily_decay_rate: m.decay })}
+                      key={m.id}
+                      onClick={() => setDraft({ ...draft, storage_method: m.id as StorageMethod, daily_decay_rate: m.daily_decay_rate })}
                       className={`flex w-full items-start gap-3 rounded-2xl border p-4 text-left transition-all duration-300 ${
                         on
                           ? 'border-[#1B5E20] bg-[#E8F5E9]'
@@ -247,7 +236,7 @@ export default function MenuProfil({
                           {m.icon} {m.label}
                         </span>
                         <span className="mt-0.5 block font-mono text-xs text-[#4B6149]">
-                          Laju susut {formatPct(m.decay * 100, 1)}/hari · batas simpan {m.shelfLife}{' '}
+                          Laju susut {formatPct(m.daily_decay_rate * 100, 1)}/hari · batas simpan {m.shelf_life_days}{' '}
                           hari
                         </span>
                       </span>
@@ -262,22 +251,30 @@ export default function MenuProfil({
               <p className="mt-1 text-xs text-[#6B7F69]">
                 Hanya komoditas terpilih yang muncul di pemilih komoditas pada bilah atas.
               </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {TRACKED_COMMODITIES.map((k) => {
-                  const on = draft.commodities.includes(k);
+              <div className="mt-3 flex flex-wrap gap-3">
+                {metadata?.commodities.map((k) => {
+                  const on = draft.commodities.some(x => x.name === k.name);
+                  const cons = draft.commodities.find(x => x.name === k.name)?.weekly_consumption_kg || 5;
                   return (
-                    <button
-                      key={k}
-                      onClick={() => toggleKomoditas(k)}
-                      className={`rounded-full px-4 py-2 text-xs font-bold transition-all duration-300 ${
-                        on
-                          ? 'bg-[#1B5E20] text-white'
-                          : 'bg-white text-[#4B6149] ring-1 ring-[#A5D6A7] hover:ring-[#66BB6A]'
-                      }`}
-                    >
-                      {on ? '✓ ' : ''}
-                      {k}
-                    </button>
+                    <div key={k.id} className={`flex items-center gap-2 rounded-2xl border p-2 pl-3 transition-colors ${on ? 'border-[#1B5E20] bg-[#E8F5E9]' : 'border-[#A5D6A7] bg-white'}`}>
+                      <label className="flex cursor-pointer items-center gap-2">
+                        <input type="checkbox" checked={on} onChange={() => toggleKomoditas(k.name)} className="accent-[#1B5E20]" />
+                        <span className={`text-xs font-bold ${on ? 'text-[#1B5E20]' : 'text-[#4B6149]'}`}>{k.name}</span>
+                      </label>
+                      {on && (
+                        <div className="flex items-center gap-1 border-l border-[#A5D6A7] pl-3">
+                          <input 
+                            type="number" 
+                            min={0.1} 
+                            step={0.1}
+                            value={cons} 
+                            onChange={e => ubahKonsumsi(k.name, Number(e.target.value))}
+                            className="w-16 rounded bg-white px-2 py-1 text-xs font-bold outline-none ring-1 ring-[#A5D6A7] focus:ring-[#1B5E20]" 
+                          />
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-[#1B5E20]">Kg</span>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -294,18 +291,14 @@ export default function MenuProfil({
                 Dampak perubahan
               </p>
               <p className="mt-1.5 text-sm leading-relaxed text-[#6B5A1E]">
-                Dengan pemakaian {formatNumber(draft.weekly_consumption_kg, 1)} kg/minggu dan metode{' '}
-                {STORAGE_METHODS[draft.storage_method].short.toLowerCase()}, bobot kotor yang perlu
-                dibeli menjadi{' '}
-                <strong className="font-mono">
-                  {formatNumber(
-                    draft.weekly_consumption_kg /
-                      Math.pow(1 - STORAGE_METHODS[draft.storage_method].decay, 3.5),
-                    2
-                  )}{' '}
-                  kg
+                Dengan metode {STORAGE_METHODS[draft.storage_method].short.toLowerCase()}, setiap 
+                kilogram bahan rata-rata perlu dibeli ekstra <strong className="font-mono">
+                  {formatPct(
+                    (1 / Math.pow(1 - STORAGE_METHODS[draft.storage_method].decay, 3.5)) * 100 - 100,
+                    1
+                  )}
                 </strong>{' '}
-                per minggu, dengan batas simpan{' '}
+                sebagai margin susut mingguan. Batas simpan maksimal adalah{' '}
                 {STORAGE_METHODS[draft.storage_method].shelfLife} hari.
               </p>
             </div>
@@ -386,17 +379,7 @@ export default function MenuProfil({
                 desc="Empat nilai berikut masuk langsung ke rumus pengadaan. Perubahan sekecil apa pun di sini mengubah rekomendasi kilogram di menu pertama."
               />
               <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                <KartuData
-                  ikon={<Scale className="h-5 w-5" />}
-                  label="Kebutuhan rutin (D)"
-                  nilai={`${formatNumber(profile.weekly_consumption_kg, 1)} kg / minggu`}
-                  penjelasan={{
-                    guna: 'Titik awal seluruh perhitungan bobot belanja. Sistem menambahkan margin susut di atas angka ini.',
-                    sumber: 'Langkah 3 formulir pendaftaran — Kebutuhan Mingguan.',
-                    rumus: `Bobot dibeli = D ÷ (1 − s)^3,5`,
-                    aksi: 'Perbarui bila menu atau jumlah pelanggan berubah, agar rekomendasi tidak meleset.',
-                  }}
-                />
+
                 <KartuData
                   ikon={<Snowflake className="h-5 w-5" />}
                   label="Metode simpan"
@@ -445,11 +428,14 @@ export default function MenuProfil({
               <div className="flex flex-wrap gap-2.5">
                 {profile.commodities.map((k) => (
                   <span
-                    key={k}
+                    key={k.name}
                     className="inline-flex items-center gap-2 rounded-2xl border border-[#A5D6A7] bg-white px-4 py-3 text-sm font-bold text-[#0D3311]"
                   >
-                    <span className="h-2 w-2 rounded-full bg-[#66BB6A]" />
-                    {k}
+                    <span className="flex items-center justify-center h-5 w-5 rounded bg-[#E8F5E9] text-[#1B5E20]">
+                      <Scale className="h-3 w-3" />
+                    </span>
+                    {k.name}
+                    <span className="text-[#6B7F69] font-mono text-xs ml-1 border-l border-[#A5D6A7] pl-2">{k.weekly_consumption_kg} kg/mg</span>
                   </span>
                 ))}
               </div>

@@ -119,16 +119,6 @@ function Hero() {
 
       <div className="relative mx-auto grid max-w-7xl items-center gap-14 px-5 lg:grid-cols-[1.05fr_0.95fr] lg:px-8">
         <div>
-          <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#66BB6A]/40 bg-[#14471C]/60 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#A5D6A7] backdrop-blur">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#66BB6A] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#66BB6A]" />
-              </span>
-              Sistem pendukung keputusan pengadaan pangan
-            </span>
-          </Reveal>
-
           <h1 className="mt-7 font-display text-[2.6rem] font-black leading-[1.04] text-white sm:text-6xl lg:text-[4.2rem]">
             {headline.map((w, i) => (
               <span

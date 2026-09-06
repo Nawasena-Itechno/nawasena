@@ -29,3 +29,7 @@ Thumbs.db
 .idea/
 
 launch.json
+
+# Temporary Files
+tmp/
+scratch/

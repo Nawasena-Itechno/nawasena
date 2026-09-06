@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
-import { Sprout, ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { DATA_DISCLAIMER } from '../data/commodities';
+import LogoMark from '../assets/nawasena-logo-logo.svg';
 
 export default function SiteFooter() {
   return (
@@ -25,8 +26,8 @@ export default function SiteFooter() {
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#66BB6A]">
-                <Sprout className="h-6 w-6 text-[#0D3311]" />
+              <span className="flex h-10 w-10 items-center justify-center">
+                <img src={LogoMark} alt="Logo Nawasena" className="h-full w-full object-contain drop-shadow-md" />
               </span>
               <span className="font-display text-2xl font-black text-white">Nawasena</span>
             </div>

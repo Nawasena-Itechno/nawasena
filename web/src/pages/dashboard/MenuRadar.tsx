@@ -35,7 +35,8 @@ export default function MenuRadar({
   }
 
   const simpan = storageOf(profile.storage_method);
-  const D = profile.weekly_consumption_kg;
+  const activeCommodity = profile.commodities.find(c => c.name === komoditas);
+  const D = activeCommodity ? activeCommodity.weekly_consumption_kg : 10;
   // Bobot kotor: jumlah yang benar-benar harus dibeli agar sisa bersihnya = D.
   const kgKotorMingguan = D / Math.pow(1 - simpan.decay, 3.5);
   const kgBulanan = kgKotorMingguan * 4;

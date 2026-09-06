@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import {
   FlaskConical,
   Play,
@@ -12,10 +12,13 @@ import {
   ChefHat,
   ShoppingCart,
   PiggyBank,
+  Sparkles,
 } from 'lucide-react';
 import type { UmkmProfile, StorageMethod } from '../../lib/profile';
 import { STORAGE_METHODS, storageOf, encyclopediaId } from '../../lib/profile';
 import type { ProcurementResponse } from '../../lib/api';
+import { fetchAiSolusi } from '../../lib/api';
+import type { AiLangkah, AiSolusiResponse } from '../../lib/api';
 import { getCommodity } from '../../data/commodities';
 import { formatIDR, formatNumber, formatPct } from '../../lib/format';
 import { InfoPop, SectionHead } from '../../components/dashboard/ui';
@@ -50,7 +53,9 @@ export default function MenuSimulasiSusut({
 }) {
   const simpanTerdaftar = storageOf(profile.storage_method);
   const hargaPasar = data?.harga_sekarang ?? 0;
-  const kgRekomendasi = data?.keputusan.KgDibeli ?? profile.weekly_consumption_kg;
+  const activeCommodity = profile.commodities.find(c => c.name === komoditas);
+  const D = activeCommodity ? activeCommodity.weekly_consumption_kg : 10;
+  const kgRekomendasi = data?.keputusan.KgDibeli ?? D;
 
   const [bobot, setBobot] = useState(Math.round(kgRekomendasi * 10) / 10);
   const [hari, setHari] = useState(7);
@@ -250,11 +255,10 @@ export default function MenuSimulasiSusut({
                   <button
                     key={key}
                     onClick={() => setMetode(key)}
-                    className={`rounded-2xl border p-4 text-left transition-all duration-300 ${
-                      on
-                        ? 'border-[#1B5E20] bg-[#1B5E20] text-white shadow-[0_16px_32px_-22px_rgba(27,94,32,1)]'
-                        : 'border-[#A5D6A7]/70 bg-white text-[#25422A] hover:border-[#66BB6A]'
-                    }`}
+                    className={`rounded-2xl border p-4 text-left transition-all duration-300 ${on
+                      ? 'border-[#1B5E20] bg-[#1B5E20] text-white shadow-[0_16px_32px_-22px_rgba(27,94,32,1)]'
+                      : 'border-[#A5D6A7]/70 bg-white text-[#25422A] hover:border-[#66BB6A]'
+                      }`}
                   >
                     <span className="text-lg">{m.icon}</span>
                     <p className="mt-1 text-sm font-bold leading-tight">{m.short}</p>
@@ -263,9 +267,8 @@ export default function MenuSimulasiSusut({
                     </p>
                     {terdaftar && (
                       <span
-                        className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${
-                          on ? 'bg-[#D3BE6D] text-[#3A3113]' : 'bg-[#E8F5E9] text-[#1B5E20]'
-                        }`}
+                        className={`mt-1.5 inline-block rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${on ? 'bg-[#D3BE6D] text-[#3A3113]' : 'bg-[#E8F5E9] text-[#1B5E20]'
+                          }`}
                       >
                         Terdaftar
                       </span>
@@ -287,11 +290,10 @@ export default function MenuSimulasiSusut({
             <button
               onClick={jalankan}
               disabled={menjalankan}
-              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold transition-transform duration-300 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-70 ${
-                kedaluwarsa || !hasil
-                  ? 'bg-[#1B5E20] text-white'
-                  : 'bg-[#E8F5E9] text-[#1B5E20]'
-              }`}
+              className={`inline-flex shrink-0 items-center gap-2 rounded-full px-7 py-3.5 text-sm font-bold transition-transform duration-300 hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-70 ${kedaluwarsa || !hasil
+                ? 'bg-[#1B5E20] text-white'
+                : 'bg-[#E8F5E9] text-[#1B5E20]'
+                }`}
             >
               {menjalankan ? (
                 <>
@@ -484,9 +486,8 @@ function HasilPanel({
               return (
                 <div
                   key={m.key}
-                  className={`rounded-2xl border p-4 ${
-                    dipakai ? 'border-[#1B5E20] bg-[#F3FAF4]' : 'border-[#A5D6A7]/60 bg-white'
-                  }`}
+                  className={`rounded-2xl border p-4 ${dipakai ? 'border-[#1B5E20] bg-[#F3FAF4]' : 'border-[#A5D6A7]/60 bg-white'
+                    }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="flex items-center gap-2 text-sm font-bold text-[#0D3311]">
@@ -723,6 +724,81 @@ const META_TINGKAT: Record<
 };
 
 function PanelSolusi({ hasil, profile }: { hasil: HasilSimulasi; profile: UmkmProfile }) {
+  const [aiData, setAiData] = useState<AiSolusiResponse | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState('');
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Panggil AI otomatis saat panel solusi ini dirender atau parameter berubah
+  useEffect(() => {
+    abortRef.current?.abort();
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
+    setAiData(null);
+    setAiError('');
+    setAiLoading(true);
+
+    fetchAiSolusi({
+      komoditas: hasil.komoditas,
+      harga_per_kg: hasil.harga,
+      bobot: hasil.bobot,
+      hari: hasil.hari,
+      metode: STORAGE_METHODS[hasil.metode]?.short ?? hasil.metode,
+      sisa_kg: hasil.sisaKg,
+      susut_kg: hasil.susutKg,
+      rugi: hasil.rugi,
+      rugi_bulanan: hasil.rugiBulanan,
+      lewat_batas: hasil.lewatBatas,
+      shelf_life: hasil.shelfLife,
+      decay: hasil.decay,
+      per_metode: hasil.perMetode.map((m) => ({
+        key: m.key,
+        label: STORAGE_METHODS[m.key]?.short ?? m.key,
+        sisa_kg: m.sisaKg,
+        rugi: m.rugi,
+      })),
+      nama_usaha: profile.business_name,
+      kategori_usaha: profile.fnb_category,
+    }, ctrl.signal)
+      .then(setAiData)
+      .catch((e: unknown) => {
+        if ((e as Error).name !== 'AbortError') setAiError((e as Error).message);
+      })
+      .finally(() => setAiLoading(false));
+
+    return () => ctrl.abort();
+  }, [hasil, profile]);
+
+  const mintaUlang = () => {
+    // Paksa trigger re-fetch dengan mengubah trigger state (karena useEffect bind ke hasil, kita panggil logic fetch lagi manual)
+    setAiData(null);
+    setAiError('');
+    setAiLoading(true);
+    fetchAiSolusi({
+      komoditas: hasil.komoditas,
+      harga_per_kg: hasil.harga,
+      bobot: hasil.bobot,
+      hari: hasil.hari,
+      metode: STORAGE_METHODS[hasil.metode]?.short ?? hasil.metode,
+      sisa_kg: hasil.sisaKg,
+      susut_kg: hasil.susutKg,
+      rugi: hasil.rugi,
+      rugi_bulanan: hasil.rugiBulanan,
+      lewat_batas: hasil.lewatBatas,
+      shelf_life: hasil.shelfLife,
+      decay: hasil.decay,
+      per_metode: hasil.perMetode.map((m) => ({
+        key: m.key,
+        label: STORAGE_METHODS[m.key]?.short ?? m.key,
+        sisa_kg: m.sisaKg,
+        rugi: m.rugi,
+      })),
+      nama_usaha: profile.business_name,
+      kategori_usaha: profile.fnb_category,
+    }).then(setAiData).catch(e => setAiError(e.message)).finally(() => setAiLoading(false));
+  };
+
   const nilaiBelanja = hasil.bobot * hasil.harga;
   const tingkat = tingkatDari(hasil.rugi, nilaiBelanja);
   const meta = META_TINGKAT[tingkat];
@@ -732,77 +808,41 @@ function PanelSolusi({ hasil, profile }: { hasil: HasilSimulasi; profile: UmkmPr
   const hematPindah = hasil.rugi - terbaik.rugi;
   const hematBulanan = hematPindah * (30 / Math.max(1, hasil.hari));
 
-  // Investasi wadah kedap udara diasumsikan Rp 150.000 untuk skala dapur UMKM.
-  const biayaWadah = 150_000;
-  const balikModalHari = hematBulanan > 0 ? (biayaWadah / hematBulanan) * 30 : Infinity;
-
-  const siklusDisarankan = Math.max(2, Math.min(hasil.hari, Math.round(hasil.shelfLife / 2)));
-  const rugiSiklusPendek =
-    (hasil.bobot / (hasil.hari / siklusDisarankan)) *
-    (1 - Math.pow(1 - hasil.decay, siklusDisarankan)) *
-    hasil.harga *
-    (hasil.hari / siklusDisarankan);
-
-  const langkah = useMemo(() => {
+  // Langkah rule-based (fallback / sebelum AI dipanggil)
+  const langkahStatis = useMemo(() => {
     const out: { ikon: React.ReactNode; judul: string; isi: string; nada: 'hijau' | 'emas' | 'merah' }[] = [];
-
-    // Selalu: kebiasaan dasar dari basis pengetahuan komoditas.
+    const biayaWadah = 150_000;
     const langkahSimpan = komoditasEnsiklopedia?.storage.steps.slice(0, 2) ?? [];
-    langkahSimpan.forEach((s) => {
-      out.push({
-        ikon: <CircleCheck className="h-5 w-5" />,
-        judul: s.title,
-        isi: s.detail,
-        nada: 'hijau',
-      });
-    });
-
+    langkahSimpan.forEach((s) => out.push({ ikon: <CircleCheck className="h-5 w-5" />, judul: s.title, isi: s.detail, nada: 'hijau' }));
     if (tingkat !== 'ringan') {
-      out.push({
-        ikon: <Snowflake className="h-5 w-5" />,
-        judul: `Pindahkan stok ke ${STORAGE_METHODS[terbaik.key].short}`,
-        isi: `Pada bobot dan lama simpan yang sama, metode ini menekan kerugian dari ${formatIDR(hasil.rugi)} menjadi ${formatIDR(terbaik.rugi)} — selisih ${formatIDR(hematPindah)} per siklus, atau sekitar ${formatIDR(hematBulanan)} sebulan. ${
-          Number.isFinite(balikModalHari) && balikModalHari < 90
-            ? `Wadah kedap udara seharga sekitar ${formatIDR(biayaWadah)} akan balik modal dalam ${Math.ceil(balikModalHari)} hari.`
-            : ''
-        }`,
-        nada: 'emas',
-      });
+      const balikModalHari = hematBulanan > 0 ? (biayaWadah / hematBulanan) * 30 : Infinity;
+      out.push({ ikon: <Snowflake className="h-5 w-5" />, judul: `Pindahkan stok ke ${STORAGE_METHODS[terbaik.key].short}`, isi: `Pada bobot dan lama simpan yang sama, metode ini menekan kerugian dari ${formatIDR(hasil.rugi)} menjadi ${formatIDR(terbaik.rugi)} — selisih ${formatIDR(hematPindah)} per siklus, atau sekitar ${formatIDR(hematBulanan)} sebulan.${Number.isFinite(balikModalHari) && balikModalHari < 90 ? ` Wadah kedap udara seharga sekitar ${formatIDR(biayaWadah)} akan balik modal dalam ${Math.ceil(balikModalHari)} hari.` : ''}`, nada: 'emas' });
     }
-
     if (tingkat === 'berat' || tingkat === 'kritis') {
-      out.push({
-        ikon: <ShoppingCart className="h-5 w-5" />,
-        judul: `Pecah belanja menjadi tiap ${siklusDisarankan} hari`,
-        isi: `Menyimpan ${formatNumber(hasil.bobot, 1)} kg selama ${hasil.hari} hari membuat sebagian besar stok menunggu terlalu lama. Membeli lebih sering dengan bobot lebih kecil menekan kerugian menjadi sekitar ${formatIDR(rugiSiklusPendek)} untuk periode yang sama, karena tidak ada stok yang menua melewati separuh umur simpannya.`,
-        nada: 'emas',
-      });
+      const siklusDisarankan = Math.max(2, Math.min(hasil.hari, Math.round(hasil.shelfLife / 2)));
+      const rugiSiklusPendek = (hasil.bobot / (hasil.hari / siklusDisarankan)) * (1 - Math.pow(1 - hasil.decay, siklusDisarankan)) * hasil.harga * (hasil.hari / siklusDisarankan);
+      out.push({ ikon: <ShoppingCart className="h-5 w-5" />, judul: `Pecah belanja menjadi tiap ${siklusDisarankan} hari`, isi: `Menyimpan ${formatNumber(hasil.bobot, 1)} kg selama ${hasil.hari} hari membuat sebagian besar stok menunggu terlalu lama. Membeli lebih sering menekan kerugian menjadi sekitar ${formatIDR(rugiSiklusPendek)} untuk periode yang sama.`, nada: 'emas' });
     }
-
     if (tingkat === 'kritis') {
-      out.push({
-        ikon: <TriangleAlert className="h-5 w-5" />,
-        judul: 'Hentikan pola penimbunan ini',
-        isi: `Kerugian ${formatIDR(hasil.rugi)} setara ${formatPct((hasil.rugi / nilaiBelanja) * 100)} dari nilai belanja. Bila diteruskan, kerugiannya mencapai ${formatIDR(hasil.rugiBulanan)} sebulan — hampir pasti melebihi selisih harga apa pun yang Anda kejar dengan menimbun. Kembali ke rekomendasi kilogram yang dihitung sistem di menu Rekomendasi Belanja.`,
-        nada: 'merah',
-      });
+      out.push({ ikon: <TriangleAlert className="h-5 w-5" />, judul: 'Hentikan pola penimbunan ini', isi: `Kerugian ${formatIDR(hasil.rugi)} setara ${formatPct((hasil.rugi / nilaiBelanja) * 100)} dari nilai belanja. Bila diteruskan, kerugiannya mencapai ${formatIDR(hasil.rugiBulanan)} sebulan.`, nada: 'merah' });
     }
-
     return out;
-  }, [
-    tingkat,
-    komoditasEnsiklopedia,
-    terbaik,
-    hasil,
-    hematPindah,
-    hematBulanan,
-    balikModalHari,
-    siklusDisarankan,
-    rugiSiklusPendek,
-    nilaiBelanja,
-  ]);
+  }, [tingkat, komoditasEnsiklopedia, terbaik, hasil, hematPindah, hematBulanan, nilaiBelanja]);
 
-  // Katalog olahan hanya relevan bila kerugiannya sudah tidak sepele.
+  // Langkah yang dirender: AI jika sudah ada, fallback ke statis
+  const langkahAktif: { ikon: React.ReactNode; judul: string; isi: string; nada: 'hijau' | 'emas' | 'merah' }[] = aiData
+    ? aiData.langkah.map((l: AiLangkah) => ({
+      ikon: l.ikon_tipe === 'snowflake' ? <Snowflake className="h-5 w-5" />
+        : l.ikon_tipe === 'cart' ? <ShoppingCart className="h-5 w-5" />
+          : l.ikon_tipe === 'alert' ? <TriangleAlert className="h-5 w-5" />
+            : <CircleCheck className="h-5 w-5" />,
+      judul: l.judul,
+      isi: l.isi,
+      nada: l.nada,
+    }))
+    : langkahStatis;
+
+  const potensiHemat = aiData ? aiData.potensi_hemat_bulanan : hematBulanan;
   const olahan = komoditasEnsiklopedia?.storage.processing ?? [];
   const tampilkanOlahan = tingkat !== 'ringan';
 
@@ -812,103 +852,136 @@ function PanelSolusi({ hasil, profile }: { hasil: HasilSimulasi; profile: UmkmPr
       <div className={`rounded-[32px] border p-6 ${meta.border} ${meta.bg}`}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <span
-              className={`inline-flex items-center gap-2 rounded-full bg-white/70 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] ${meta.warna}`}
-            >
+            <span className={`inline-flex items-center gap-2 rounded-full bg-white/70 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] ${meta.warna}`}>
               <Lightbulb className="h-3.5 w-3.5" /> {meta.label}
             </span>
             <h3 className={`mt-3 font-display text-2xl font-black leading-tight ${meta.warna}`}>
               Kerugian <CountUp to={hasil.rugi} prefix="Rp " /> pada siklus ini
             </h3>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#4B6149]">{meta.ringkas}</p>
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#4B6149]">
+              {aiData ? aiData.ringkasan_tingkat : meta.ringkas}
+            </p>
           </div>
-
           <div className="rounded-2xl bg-white/70 p-4 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A8C78]">
-              Porsi nilai belanja
-            </p>
-            <p className={`mt-1 font-mono text-2xl font-black ${meta.warna}`}>
-              {formatPct((hasil.rugi / nilaiBelanja) * 100)}
-            </p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#7A8C78]">Porsi nilai belanja</p>
+            <p className={`mt-1 font-mono text-2xl font-black ${meta.warna}`}>{formatPct((hasil.rugi / nilaiBelanja) * 100)}</p>
             <p className="mt-0.5 text-[11px] text-[#6B7F69]">dari {formatIDR(nilaiBelanja)}</p>
           </div>
         </div>
-
         {/* Meteran tingkat */}
         <div className="mt-5">
           <div className="flex h-2.5 overflow-hidden rounded-full">
             {(['ringan', 'sedang', 'berat', 'kritis'] as Tingkat[]).map((t) => (
-              <div
-                key={t}
-                className={`flex-1 transition-opacity duration-500 ${
-                  t === 'ringan'
-                    ? 'bg-[#66BB6A]'
-                    : t === 'sedang'
-                      ? 'bg-[#D3BE6D]'
-                      : t === 'berat'
-                        ? 'bg-[#E08A2E]'
-                        : 'bg-[#E05A3F]'
-                } ${tingkat === t ? 'opacity-100' : 'opacity-25'}`}
-              />
+              <div key={t} className={`flex-1 transition-opacity duration-500 ${t === 'ringan' ? 'bg-[#66BB6A]' : t === 'sedang' ? 'bg-[#D3BE6D]' : t === 'berat' ? 'bg-[#E08A2E]' : 'bg-[#E05A3F]'} ${tingkat === t ? 'opacity-100' : 'opacity-25'}`} />
             ))}
           </div>
           <div className="mt-1.5 flex justify-between text-[10px] font-bold uppercase tracking-wider text-[#7A8C78]">
-            <span>Ringan</span>
-            <span>Sedang</span>
-            <span>Berat</span>
-            <span>Kritis</span>
+            <span>Ringan</span><span>Sedang</span><span>Berat</span><span>Kritis</span>
           </div>
         </div>
       </div>
 
-      {/* Langkah */}
+      {/* Langkah — badge AI jika aktif */}
       <section>
-        <SectionHead
-          eyebrow="Langkah yang disarankan"
-          title={`${langkah.length} tindakan untuk ${profile.business_name}`}
-          desc="Urutan ini disusun dari yang paling murah dan paling cepat dampaknya. Kerjakan dari atas."
-        />
-        <div className="space-y-3">
-          {langkah.map((l, i) => {
-            const gaya = {
-              hijau: 'border-[#A5D6A7] bg-[#E8F5E9] text-[#1B5E20]',
-              emas: 'border-[#D3BE6D]/60 bg-[#FBF6E4] text-[#8A7420]',
-              merah: 'border-[#E7B4A6] bg-[#FDECEA] text-[#A6301C]',
-            }[l.nada];
-            return (
-              <div key={l.judul} className={`flex gap-4 rounded-3xl border p-5 ${gaya}`}>
-                <span className="mt-0.5 shrink-0">{l.ikon}</span>
-                <div>
-                  <p className="font-display text-base font-bold text-[#0D3311]">
-                    {i + 1}. {l.judul}
-                  </p>
-                  <p className="mt-1.5 text-sm leading-relaxed text-[#4B6149]">{l.isi}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2E7D32]">Langkah yang disarankan</p>
+            <h2 className="mt-1 font-display text-xl font-black text-[#0D3311]">
+              {langkahAktif.length} tindakan untuk {profile.business_name}
+            </h2>
+            <p className="mt-1 text-sm text-[#4B6149]">Urutan ini disusun dari yang paling murah dan paling cepat dampaknya. Kerjakan dari atas.</p>
+          </div>
+          {aiData && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F5E9] px-3 py-1.5 text-xs font-bold text-[#1B5E20] border border-[#A5D6A7]">
+              <Sparkles className="h-3.5 w-3.5" /> Dihasilkan oleh AI
+            </span>
+          )}
+        </div>
+
+        {/* Loading skeleton */}
+        {aiLoading && (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-4 rounded-3xl border border-[#A5D6A7]/60 p-5 bg-white animate-pulse">
+                <div className="h-5 w-5 rounded-full bg-[#C8E6C9] shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 w-2/5 rounded bg-[#C8E6C9]" />
+                  <div className="h-3 w-full rounded bg-[#E8F5E9]" />
+                  <div className="h-3 w-4/5 rounded bg-[#E8F5E9]" />
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Error */}
+        {aiError && !aiLoading && (
+          <div className="flex items-start gap-3 rounded-3xl border border-[#E7B4A6] bg-[#FDECEA] p-5 mb-3">
+            <TriangleAlert className="h-5 w-5 shrink-0 text-[#A6301C] mt-0.5" />
+            <div>
+              <p className="font-bold text-sm text-[#7E2416]">Gagal menghubungi AI</p>
+              <p className="mt-1 text-xs text-[#A6301C] leading-relaxed">{aiError}</p>
+              <button onClick={mintaUlang} className="mt-2 text-xs font-bold underline text-[#A6301C]">Coba lagi</button>
+            </div>
+          </div>
+        )}
+
+        {/* Kartu langkah */}
+        {!aiLoading && (
+          <div className="space-y-3">
+            {langkahAktif.map((l, i) => {
+              const gaya = { hijau: 'border-[#A5D6A7] bg-[#E8F5E9] text-[#1B5E20]', emas: 'border-[#D3BE6D]/60 bg-[#FBF6E4] text-[#8A7420]', merah: 'border-[#E7B4A6] bg-[#FDECEA] text-[#A6301C]' }[l.nada];
+              return (
+                <div key={i} className={`flex gap-4 rounded-3xl border p-5 ${gaya}`}>
+                  <span className="mt-0.5 shrink-0">{l.ikon}</span>
+                  <div>
+                    <p className="font-display text-base font-bold text-[#0D3311]">{i + 1}. {l.judul}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[#4B6149]">{l.isi}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Tombol minta ulang AI */}
+        {!aiLoading && (
+          <button
+            onClick={mintaUlang}
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#0D3311] px-5 py-2.5 text-xs font-bold text-white transition-transform hover:-translate-y-0.5"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {aiData ? 'Minta saran baru?' : 'Minta analisis dari AI'}
+          </button>
+        )}
       </section>
 
       {/* Katalog olahan */}
-      {tampilkanOlahan && olahan.length > 0 && (
+      {tampilkanOlahan && (aiData ? aiData.olahan : olahan).length > 0 && (
         <section>
-          <SectionHead
-            eyebrow="Mitigasi stok berlebih"
-            title="Ubah stok yang terancam busuk menjadi produk tahan lama"
-            desc={`Pilihan ini muncul karena kerugian Anda tergolong ${meta.label.toLowerCase()}. Mengolah sekarang jauh lebih murah daripada membuang ${formatNumber(hasil.susutKg, 2)} kg minggu depan.`}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#2E7D32]">Mitigasi stok berlebih</p>
+              <h2 className="mt-1 font-display text-xl font-black text-[#0D3311]">
+                Ubah stok yang terancam busuk menjadi produk tahan lama
+              </h2>
+              <p className="mt-1 text-sm text-[#4B6149]">
+                Pilihan ini muncul karena kerugian Anda tergolong {meta.label.toLowerCase()}. Mengolah sekarang jauh lebih murah daripada membuang {formatNumber(hasil.susutKg, 2)} kg minggu depan.
+              </p>
+            </div>
+            {aiData && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E8F5E9] px-3 py-1.5 text-xs font-bold text-[#1B5E20] border border-[#A5D6A7]">
+                <Sparkles className="h-3.5 w-3.5" /> Khusus untuk {profile.fnb_category}
+              </span>
+            )}
+          </div>
+
           <div className="grid gap-3 md:grid-cols-3">
-            {olahan.map((o) => (
-              <div
-                key={o.name}
-                className="rounded-3xl border border-[#A5D6A7]/70 bg-white p-5 transition-transform duration-300 hover:-translate-y-1"
-              >
+            {(aiData ? aiData.olahan.map(o => ({ name: o.nama, life: o.daya_tahan, note: o.catatan })) : olahan).map((o) => (
+              <div key={o.name} className="rounded-3xl border border-[#A5D6A7]/70 bg-white p-5 transition-transform duration-300 hover:-translate-y-1">
                 <div className="flex items-start justify-between gap-2">
                   <ChefHat className="h-5 w-5 shrink-0 text-[#2E7D32]" />
-                  <span className="rounded-full bg-[#E8F5E9] px-2.5 py-1 font-mono text-[10px] font-bold text-[#1B5E20]">
-                    {o.life}
-                  </span>
+                  <span className="rounded-full bg-[#E8F5E9] px-2.5 py-1 font-mono text-[10px] font-bold text-[#1B5E20]">{o.life}</span>
                 </div>
                 <p className="mt-3 font-display text-base font-bold text-[#0D3311]">{o.name}</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-[#4B6149]">{o.note}</p>
@@ -923,25 +996,22 @@ function PanelSolusi({ hasil, profile }: { hasil: HasilSimulasi; profile: UmkmPr
         <div className="flex items-start gap-3">
           <PiggyBank className="mt-0.5 h-6 w-6 shrink-0 text-[#D3BE6D]" />
           <div>
-            <p className="font-display text-lg font-black">
-              Bila seluruh langkah di atas dijalankan
-            </p>
+            <p className="font-display text-lg font-black">Bila seluruh langkah di atas dijalankan</p>
             <p className="mt-1 max-w-xl text-sm leading-relaxed text-[#A5D6A7]">
-              Kerugian per siklus turun dari {formatIDR(hasil.rugi)} menjadi{' '}
-              {formatIDR(terbaik.rugi)}, dan dalam sebulan usaha Anda menyelamatkan sekitar{' '}
-              <strong className="font-mono text-white">{formatIDR(hematBulanan)}</strong>.
+              Kerugian per siklus turun dari {formatIDR(hasil.rugi)} menjadi {formatIDR(terbaik.rugi)}, dan dalam sebulan usaha Anda menyelamatkan sekitar{' '}
+              <strong className="font-mono text-white">{formatIDR(potensiHemat)}</strong>.
             </p>
           </div>
         </div>
         <div className="rounded-2xl bg-[#14471C] px-5 py-4 text-center">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8FBF8F]">
-            Potensi hemat bulanan
-          </p>
-          <p className="mt-1 font-mono text-2xl font-black text-[#D3BE6D]">
-            {formatIDR(hematBulanan)}
-          </p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-[#8FBF8F]">Potensi hemat bulanan</p>
+          <p className="mt-1 font-mono text-2xl font-black text-[#D3BE6D]">{formatIDR(potensiHemat)}</p>
         </div>
       </section>
     </div>
   );
 }
+
+
+
+

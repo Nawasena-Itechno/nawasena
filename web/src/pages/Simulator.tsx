@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
-  FlaskConical,
+
   AlertTriangle,
   ArrowRight,
   Scale,
@@ -115,18 +115,12 @@ export default function Simulator() {
       <SiteHeader />
 
       {/* Kepala halaman */}
-      <section className="relative overflow-hidden bg-[#0D3311] pb-24 pt-16">
+      <section className="relative -mt-[76px] overflow-hidden bg-[#0D3311] pb-24 pt-32">
         <div className="hairline-grid absolute inset-0 opacity-[0.15]" />
         <div className="absolute -right-20 top-0 h-80 w-80 rounded-full bg-[#2E7D32] opacity-60 blur-3xl anim-float" />
         <div className="absolute -left-24 bottom-4 h-72 w-72 rounded-full bg-[#1B5E20] opacity-70 blur-3xl anim-float-slow" />
 
         <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
-          <Reveal>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#66BB6A]/40 bg-[#14471C]/70 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#A5D6A7]">
-              <FlaskConical className="h-3.5 w-3.5" />
-              Simulator Kerugian Dapur
-            </span>
-          </Reveal>
           <Reveal delay={80}>
             <h1 className="mt-5 max-w-3xl font-display text-4xl font-black leading-[1.08] text-white md:text-6xl">
               Berapa rupiah yang <span className="shimmer-text">membusuk</span> di dapur Anda

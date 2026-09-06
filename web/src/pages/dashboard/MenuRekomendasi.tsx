@@ -57,7 +57,8 @@ export default function MenuRekomendasi({
 
   const k = data.keputusan;
   const simpan = storageOf(profile.storage_method);
-  const D = profile.weekly_consumption_kg;
+  const activeCommodity = profile.commodities.find(c => c.name === komoditas);
+  const D = activeCommodity ? activeCommodity.weekly_consumption_kg : 10;
   const nilaiBelanja = k.KgDibeli * data.harga_sekarang;
   const tanggalBeliLagi = tambahHari(asOf, 7 * k.MingguDibeli);
 
