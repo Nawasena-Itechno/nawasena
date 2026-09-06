@@ -68,7 +68,7 @@ export default function SiteHeader({ variant = 'auto' }: { variant?: 'auto' | 's
                   onDark ? 'text-[#A5D6A7]' : 'text-[#2E7D32]'
                 }`}
               >
-                Pangan · Risiko · Keputusan
+                Navigate Prices, Eliminate Waste
               </span>
             </span>
           </Link>

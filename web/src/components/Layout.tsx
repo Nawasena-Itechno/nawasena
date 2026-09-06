@@ -1,6 +1,6 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
-import { auth } from '../lib/auth';
+
 import SiteHeader from './SiteHeader';
 import SiteFooter from './SiteFooter';
 
@@ -12,17 +12,6 @@ export default function Layout() {
     // Scroll to top on route change
     window.scrollTo(0, 0);
 
-    // Auth Guard
-    const isAuthRoute = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/register-umkm';
-    const isPublicRoute = location.pathname === '/' || location.pathname === '/encyclopedia' || location.pathname === '/simulator' || location.pathname === '/methodology';
-    
-    const token = auth.getToken();
-
-    if (!token && !isAuthRoute && !isPublicRoute) {
-      navigate('/login');
-    } else if (token && isAuthRoute) {
-      navigate('/dashboard');
-    }
   }, [location.pathname, navigate]);
 
   return (
